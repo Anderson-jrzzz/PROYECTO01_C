@@ -10,5 +10,6 @@ import com.bodeapp.uiproyec.screens.*
 fun BodeAppNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "login") {
         composable("productos") { ProductosScreen(navController) }
+        composable("compras") { ComprasScreen(navController) }
     }
 }
