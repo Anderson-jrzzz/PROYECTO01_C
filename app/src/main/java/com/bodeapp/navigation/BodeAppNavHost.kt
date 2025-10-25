@@ -9,9 +9,13 @@ import com.bodeapp.uiproyec.screens.*
 @Composable
 fun BodeAppNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "login") {
+        composable("login") { LoginScreen(navController) }
+        composable("register") { RegisterScreen(navController) }
+        composable("home") { HomeScreen(navController) }
         composable("productos") { ProductosScreen(navController) }
-        composable("compras") { ComprasScreen(navController) }
         composable("ventas") { VentasScreen(navController) }
+        composable("compras") { ComprasScreen(navController) }
         composable("cierre") { CierreCajaScreen(navController) }
+        composable("historial") { HistorialScreen(navController) }
     }
 }
