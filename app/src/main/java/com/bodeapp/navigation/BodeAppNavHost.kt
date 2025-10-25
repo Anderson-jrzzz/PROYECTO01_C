@@ -12,6 +12,10 @@ fun BodeAppNavHost(navController: NavHostController) {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
+        composable("productos") { ProductosScreen(navController) }
+        composable("ventas") { VentasScreen(navController) }
+        composable("compras") { ComprasScreen(navController) }
+        composable("cierre") { CierreCajaScreen(navController) }
         composable("historial") { HistorialScreen(navController) }
     }
 }
