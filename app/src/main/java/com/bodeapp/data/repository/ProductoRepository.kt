@@ -1,5 +1,6 @@
-package com.bodeapp.data
+package com.bodeapp.data.repository
 
+import com.bodeapp.data.ProductoDao
 import com.bodeapp.model.Producto
 import kotlinx.coroutines.flow.Flow
 

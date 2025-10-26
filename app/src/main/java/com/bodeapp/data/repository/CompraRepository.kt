@@ -1,8 +1,9 @@
-package com.bodeapp.data
+package com.bodeapp.data.repository
 
+import com.bodeapp.data.CompraDao
 import com.bodeapp.model.Compra
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.Calendar
 
 class CompraRepository(private val compraDao: CompraDao) {
 
