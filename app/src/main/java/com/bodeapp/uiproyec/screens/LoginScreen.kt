@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+//import androidx.compose.material.icons.filled.Store
+//import androidx.compose.material.icons.filled.Visibility
+//import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +31,8 @@ fun LoginScreen(navController: NavHostController) {
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(
@@ -60,7 +65,7 @@ fun LoginScreen(navController: NavHostController) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Clear,
+                    imageVector = Icons.Default.Email,
                     contentDescription = "Logo",
                     tint = Color.White,
                     modifier = Modifier.size(50.dp)
@@ -105,7 +110,8 @@ fun LoginScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -135,7 +141,7 @@ fun LoginScreen(navController: NavHostController) {
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Email else Icons.Default.Clear,
+                            imageVector = if (passwordVisible) Icons.Default.Lock else Icons.Default.Edit,
                             contentDescription = null,
                             tint = Color(0xFF999999)
                         )
@@ -146,7 +152,8 @@ fun LoginScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -172,7 +179,7 @@ fun LoginScreen(navController: NavHostController) {
                     )
                 }
 
-                TextButton(onClick = { /* TODO */ }) {
+                TextButton(onClick = { /* TODO: Implementar recuperación de contraseña */ }) {
                     Text(
                         text = "¿Olvidaste tu contraseña?",
                         color = Color(0xFFFF6B00),
@@ -185,7 +192,26 @@ fun LoginScreen(navController: NavHostController) {
 
             // Login Button
             Button(
-                onClick = { navController.navigate("home") },
+                onClick = {
+                    // Validaciones
+                    when {
+                        email.isEmpty() -> {
+                            errorMessage = "Por favor ingresa tu email"
+                            showError = true
+                        }
+                        password.isEmpty() -> {
+                            errorMessage = "Por favor ingresa tu contraseña"
+                            showError = true
+                        }
+                        else -> {
+                            // Login exitoso (sin validación real por ahora)
+                            navController.navigate("home") {
+                                // Limpiar el back stack para que no pueda volver al login con el botón atrás
+                                popUpTo("login") { inclusive = true }
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -229,6 +255,28 @@ fun LoginScreen(navController: NavHostController) {
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
+                }
+            }
+        }
+
+        // Snackbar de error
+        if (showError) {
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(3000)
+                showError = false
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Snackbar(
+                    containerColor = Color(0xFFF44336),
+                    contentColor = Color.White
+                ) {
+                    Text(errorMessage)
                 }
             }
         }

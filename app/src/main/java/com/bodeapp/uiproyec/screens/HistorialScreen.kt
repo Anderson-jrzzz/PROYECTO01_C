@@ -17,45 +17,77 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.bodeapp.model.Compra
+import com.bodeapp.model.Venta
+import com.bodeapp.viewmodel.VentaViewModel
+import com.bodeapp.viewmodel.CompraViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
-sealed class Transaccion {
+sealed class TransaccionHistorial {
     abstract val id: Int
     abstract val producto: String
     abstract val cantidad: Int
     abstract val monto: Double
-    abstract val fecha: String
+    abstract val fecha: Long
 
     data class TransaccionVenta(
         override val id: Int,
         override val producto: String,
         override val cantidad: Int,
         override val monto: Double,
-        override val fecha: String
-    ) : Transaccion()
+        override val fecha: Long
+    ) : TransaccionHistorial()
 
     data class TransaccionCompra(
         override val id: Int,
         override val producto: String,
         override val cantidad: Int,
         override val monto: Double,
-        override val fecha: String
-    ) : Transaccion()
+        override val fecha: Long
+    ) : TransaccionHistorial()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistorialScreen(navController: NavHostController) {
+fun HistorialScreen(
+    navController: NavHostController,
+    ventaViewModel: VentaViewModel = viewModel(),
+    compraViewModel: CompraViewModel = viewModel()
+) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Todos", "Ventas", "Compras")
 
-    val transacciones = listOf(
-        Transaccion.TransaccionVenta(1, "coca cola", 30, 45.00, "05:15 p.m."),
-        Transaccion.TransaccionCompra(2, "coca cola", 30, 40.00, "24/10")
-    )
+    val ventasDelDia by ventaViewModel.ventasDelDia.collectAsState()
+    val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
+    val totalVentas by ventaViewModel.totalVentas.collectAsState()
+    val totalCompras by compraViewModel.totalCompras.collectAsState()
 
-    val totalVentas = 45.00
-    val totalCompras = 40.00
+    val todasTransacciones = remember(ventasDelDia, comprasDelDia) {
+        val ventas = ventasDelDia.map { venta ->
+            TransaccionHistorial.TransaccionVenta(
+                id = venta.id,
+                producto = venta.nombreProducto,
+                cantidad = venta.cantidad,
+                monto = venta.total,
+                fecha = venta.fecha
+            )
+        }
+
+        val compras = comprasDelDia.map { compra ->
+            TransaccionHistorial.TransaccionCompra(
+                id = compra.id,
+                producto = compra.nombreProducto,
+                cantidad = compra.cantidad,
+                monto = compra.costo,
+                fecha = compra.fecha
+            )
+        }
+
+        (ventas + compras).sortedByDescending { it.fecha }
+    }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
@@ -66,7 +98,6 @@ fun HistorialScreen(navController: NavHostController) {
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +129,6 @@ fun HistorialScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            // Resumen
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -156,7 +186,6 @@ fun HistorialScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tabs
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
@@ -184,19 +213,40 @@ fun HistorialScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Lista de transacciones filtradas
             val transaccionesFiltradas = when (selectedTab) {
-                0 -> transacciones // Todos
-                1 -> transacciones.filterIsInstance<Transaccion.TransaccionVenta>() // Ventas
-                2 -> transacciones.filterIsInstance<Transaccion.TransaccionCompra>() // Compras
-                else -> transacciones
+                0 -> todasTransacciones
+                1 -> todasTransacciones.filterIsInstance<TransaccionHistorial.TransaccionVenta>()
+                2 -> todasTransacciones.filterIsInstance<TransaccionHistorial.TransaccionCompra>()
+                else -> todasTransacciones
             }
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(transaccionesFiltradas) { transaccion ->
-                    TransaccionItem(transaccion)
+            if (transaccionesFiltradas.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        tint = Color(0xFFE0E0E0),
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No hay transacciones registradas",
+                        color = Color(0xFF999999),
+                        fontSize = 14.sp
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(transaccionesFiltradas) { transaccion ->
+                        TransaccionHistorialItem(transaccion)
+                    }
                 }
             }
         }
@@ -204,13 +254,20 @@ fun HistorialScreen(navController: NavHostController) {
 }
 
 @Composable
-fun TransaccionItem(transaccion: Transaccion) {
-    val esVenta = transaccion is Transaccion.TransaccionVenta
+fun TransaccionHistorialItem(transaccion: TransaccionHistorial) {
+    val esVenta = transaccion is TransaccionHistorial.TransaccionVenta
     val backgroundColor = if (esVenta) Color(0xFF4CAF50) else Color(0xFFFF6B00)
-    val icon = if (esVenta) Icons.Default.Email else Icons.Default.ShoppingCart
+    val icon = if (esVenta) Icons.Default.DateRange else Icons.Default.ShoppingCart
     val tipo = if (esVenta) "Venta" else "Compra"
     val signo = if (esVenta) "+" else "-"
     val colorMonto = if (esVenta) Color(0xFF4CAF50) else Color(0xFFF44336)
+
+    val dateFormat = if (esVenta) {
+        SimpleDateFormat("hh:mm a", Locale.getDefault())
+    } else {
+        SimpleDateFormat("dd/MM", Locale.getDefault())
+    }
+    val fecha = dateFormat.format(Date(transaccion.fecha))
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -225,9 +282,7 @@ fun TransaccionItem(transaccion: Transaccion) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -277,18 +332,16 @@ fun TransaccionItem(transaccion: Transaccion) {
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = if (esVenta) Icons.Default.AccountCircle else Icons.Default.Clear,
+                    imageVector = if (esVenta) Icons.Default.Lock else Icons.Default.DateRange,
                     contentDescription = null,
                     tint = Color(0xFF999999),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = transaccion.fecha,
+                    text = fecha,
                     fontSize = 12.sp,
                     color = Color(0xFF999999)
                 )

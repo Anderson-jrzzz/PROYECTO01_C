@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +32,10 @@ fun RegisterScreen(navController: NavHostController) {
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var acceptTerms by remember { mutableStateOf(false) }
+
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var showSuccess by remember { mutableStateOf(false) }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
@@ -99,7 +104,8 @@ fun RegisterScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -127,7 +133,8 @@ fun RegisterScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -146,7 +153,7 @@ fun RegisterScreen(navController: NavHostController) {
                 placeholder = { Text("Mi Bodega") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Build,
+                        imageVector = Icons.Default.Email,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -155,7 +162,8 @@ fun RegisterScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -182,7 +190,7 @@ fun RegisterScreen(navController: NavHostController) {
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Menu else Icons.Default.Clear,
+                            imageVector = if (passwordVisible) Icons.Default.ShoppingCart else Icons.Default.Email,
                             contentDescription = null,
                             tint = Color(0xFF999999)
                         )
@@ -193,7 +201,8 @@ fun RegisterScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -220,7 +229,7 @@ fun RegisterScreen(navController: NavHostController) {
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
-                            imageVector = if (confirmPasswordVisible) Icons.Default.Add else Icons.Default.Call,
+                            imageVector = if (confirmPasswordVisible) Icons.Default.ShoppingCart else Icons.Default.Close,
                             contentDescription = null,
                             tint = Color(0xFF999999)
                         )
@@ -231,7 +240,8 @@ fun RegisterScreen(navController: NavHostController) {
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -258,7 +268,54 @@ fun RegisterScreen(navController: NavHostController) {
 
             // Register Button
             Button(
-                onClick = { navController.navigate("home") },
+                onClick = {
+                    // Validaciones
+                    when {
+                        fullName.isEmpty() -> {
+                            errorMessage = "Por favor ingresa tu nombre completo"
+                            showError = true
+                        }
+                        email.isEmpty() -> {
+                            errorMessage = "Por favor ingresa tu email"
+                            showError = true
+                        }
+                        !email.contains("@") -> {
+                            errorMessage = "Por favor ingresa un email válido"
+                            showError = true
+                        }
+                        storeName.isEmpty() -> {
+                            errorMessage = "Por favor ingresa el nombre de tu bodega"
+                            showError = true
+                        }
+                        password.isEmpty() -> {
+                            errorMessage = "Por favor ingresa una contraseña"
+                            showError = true
+                        }
+                        password.length < 6 -> {
+                            errorMessage = "La contraseña debe tener al menos 6 caracteres"
+                            showError = true
+                        }
+                        password != confirmPassword -> {
+                            errorMessage = "Las contraseñas no coinciden"
+                            showError = true
+                        }
+                        !acceptTerms -> {
+                            errorMessage = "Debes aceptar los términos y condiciones"
+                            showError = true
+                        }
+                        else -> {
+                            // Registro exitoso
+                            showSuccess = true
+                            // Navegar al home después de 2 segundos
+                            kotlinx.coroutines.MainScope().launch {
+                                kotlinx.coroutines.delay(2000)
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -306,6 +363,38 @@ fun RegisterScreen(navController: NavHostController) {
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+
+    // Snackbars
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        if (showError) {
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(3000)
+                showError = false
+            }
+            Snackbar(
+                containerColor = Color(0xFFF44336),
+                contentColor = Color.White
+            ) {
+                Text(errorMessage)
+            }
+        }
+
+        if (showSuccess) {
+            Snackbar(
+                containerColor = Color(0xFF4CAF50),
+                contentColor = Color.White
+            ) {
+                Text("✓ Cuenta creada exitosamente")
             }
         }
     }

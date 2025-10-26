@@ -16,40 +16,44 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.bodeapp.model.Producto
+import com.bodeapp.model.Venta
+import com.bodeapp.viewmodel.ProductoViewModel
+import com.bodeapp.viewmodel.VentaViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class Venta(
-    val id: Int,
-    val producto: String,
-    val cantidad: Int,
-    val total: Double,
-    val fecha: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VentasScreen(navController: NavHostController) {
-    var ventas by remember {
-        mutableStateOf(
-            listOf(
-                Venta(1, "coca cola", 30, 45.00, "05:15 p.m.")
-            )
-        )
-    }
+fun VentasScreen(
+    navController: NavHostController,
+    productoViewModel: ProductoViewModel = viewModel(),
+    ventaViewModel: VentaViewModel = viewModel()
+) {
+    val productos by productoViewModel.productos.collectAsState()
+    val ventasDelDia by ventaViewModel.ventasDelDia.collectAsState()
 
-    var productoSeleccionado by remember { mutableStateOf("") }
+    var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
     var cantidad by remember { mutableStateOf("") }
     var subtotal by remember { mutableStateOf(0.0) }
     var expanded by remember { mutableStateOf(false) }
 
-    val productos = listOf("coca cola (Stock: 30)")
-    val precioUnitario = 1.50
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var showSuccess by remember { mutableStateOf(false) }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
     )
+
+    // Calcular subtotal cuando cambie la cantidad
+    LaunchedEffect(cantidad, productoSeleccionado) {
+        val cant = cantidad.toIntOrNull() ?: 0
+        val precio = productoSeleccionado?.precio ?: 0.0
+        subtotal = cant * precio
+    }
 
     Column(
         modifier = Modifier
@@ -63,9 +67,7 @@ fun VentasScreen(navController: NavHostController) {
                 .background(orangeGradient)
                 .padding(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
@@ -101,7 +103,7 @@ fun VentasScreen(navController: NavHostController) {
                 onExpandedChange = { expanded = !expanded }
             ) {
                 OutlinedTextField(
-                    value = productoSeleccionado,
+                    value = productoSeleccionado?.let { "${it.nombre} (Stock: ${it.stock})" } ?: "",
                     onValueChange = {},
                     readOnly = true,
                     modifier = Modifier
@@ -120,21 +122,37 @@ fun VentasScreen(navController: NavHostController) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    productos.forEach { producto ->
+                    if (productos.isEmpty()) {
                         DropdownMenuItem(
-                            text = { Text(producto) },
-                            onClick = {
-                                productoSeleccionado = producto
-                                expanded = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFF6B00)
-                                )
-                            }
+                            text = { Text("No hay productos registrados") },
+                            onClick = {}
                         )
+                    } else {
+                        productos.forEach { producto ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(producto.nombre, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "Stock: ${producto.stock} - S/ ${String.format("%.2f", producto.precio)}",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF666666)
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    productoSeleccionado = producto
+                                    expanded = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFF6B00)
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -148,14 +166,13 @@ fun VentasScreen(navController: NavHostController) {
                 color = Color(0xFF666666),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+
             OutlinedTextField(
                 value = cantidad,
-                onValueChange = {
-                    cantidad = it
-                    subtotal = (it.toIntOrNull() ?: 0) * precioUnitario
-                },
+                onValueChange = { cantidad = it.filter { char -> char.isDigit() } },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("0") },
+                enabled = productoSeleccionado != null,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFFF6B00),
                     unfocusedBorderColor = Color(0xFFE0E0E0)
@@ -169,13 +186,9 @@ fun VentasScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFFF8E1)
-                )
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Subtotal",
                         fontSize = 14.sp,
@@ -195,26 +208,46 @@ fun VentasScreen(navController: NavHostController) {
             // Botón Registrar Venta
             Button(
                 onClick = {
-                    if (productoSeleccionado.isNotEmpty() && cantidad.isNotEmpty()) {
-                        val nuevaVenta = Venta(
-                            id = ventas.size + 1,
-                            producto = "coca cola",
-                            cantidad = cantidad.toIntOrNull() ?: 0,
-                            total = subtotal,
-                            fecha = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
-                        )
-                        ventas = ventas + nuevaVenta
-                        productoSeleccionado = ""
-                        cantidad = ""
-                        subtotal = 0.0
+                    if (productoSeleccionado == null) {
+                        errorMessage = "Selecciona un producto"
+                        showError = true
+                        return@Button
                     }
+
+                    val cant = cantidad.toIntOrNull()
+                    if (cant == null || cant <= 0) {
+                        errorMessage = "Ingresa una cantidad válida"
+                        showError = true
+                        return@Button
+                    }
+
+                    val producto = productoSeleccionado!!
+                    val nuevaVenta = Venta(
+                        productoId = producto.id,
+                        nombreProducto = producto.nombre,
+                        cantidad = cant,
+                        precioUnitario = producto.precio,
+                        total = subtotal
+                    )
+
+                    ventaViewModel.registrarVenta(
+                        venta = nuevaVenta,
+                        onSuccess = {
+                            showSuccess = true
+                            productoSeleccionado = null
+                            cantidad = ""
+                            subtotal = 0.0
+                        },
+                        onError = { error ->
+                            errorMessage = error
+                            showError = true
+                        }
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues(),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -236,13 +269,13 @@ fun VentasScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             // Lista de ventas del día
-            if (ventas.isEmpty()) {
+            if (ventasDelDia.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Clear,
+                        imageVector = Icons.Default.Close,
                         contentDescription = null,
                         tint = Color(0xFFE0E0E0),
                         modifier = Modifier.size(80.dp)
@@ -256,7 +289,7 @@ fun VentasScreen(navController: NavHostController) {
                 }
             } else {
                 Text(
-                    text = "Ventas del día",
+                    text = "Ventas del día (${ventasDelDia.size})",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF333333)
@@ -264,13 +297,51 @@ fun VentasScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(ventas) { venta ->
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(ventasDelDia) { venta ->
                         VentaItem(venta)
                     }
                 }
+            }
+        }
+    }
+
+    // Snackbars
+    if (showError) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(3000)
+            showError = false
+        }
+    }
+
+    if (showSuccess) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(2000)
+            showSuccess = false
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        if (showError) {
+            Snackbar(
+                containerColor = Color(0xFFF44336),
+                contentColor = Color.White
+            ) {
+                Text(errorMessage)
+            }
+        }
+
+        if (showSuccess) {
+            Snackbar(
+                containerColor = Color(0xFF4CAF50),
+                contentColor = Color.White
+            ) {
+                Text("✓ Venta registrada exitosamente")
             }
         }
     }
@@ -278,6 +349,9 @@ fun VentasScreen(navController: NavHostController) {
 
 @Composable
 fun VentaItem(venta: Venta) {
+    val dateFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    val fecha = dateFormat.format(Date(venta.fecha))
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -291,9 +365,7 @@ fun VentaItem(venta: Venta) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -301,7 +373,7 @@ fun VentaItem(venta: Venta) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        imageVector = Icons.Default.DateRange,
                         contentDescription = null,
                         tint = Color.White
                     )
@@ -309,7 +381,7 @@ fun VentaItem(venta: Venta) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = venta.producto,
+                        text = venta.nombreProducto,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF333333)
@@ -331,18 +403,16 @@ fun VentaItem(venta: Venta) {
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.Clear,
+                    imageVector = Icons.Default.Close,
                     contentDescription = null,
                     tint = Color(0xFF999999),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = venta.fecha,
+                    text = fecha,
                     fontSize = 12.sp,
                     color = Color(0xFF999999)
                 )

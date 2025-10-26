@@ -74,7 +74,7 @@ fun HomeScreen(navController: NavHostController) {
             }
         }
 
-        // Menu items
+        // Menú principal
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,7 +87,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Productos",
                     subtitle = "Gestiona tu inventario",
-                    icon = Icons.Default.Menu,
+                    icon = Icons.Default.ShoppingCart,
                     backgroundColor = Color(0xFFFF6B00),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("productos") }
@@ -98,7 +98,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Ventas",
                     subtitle = "Registra nuevas ventas",
-                    icon = Icons.Default.Build,
+                    icon = Icons.Default.Email,
                     backgroundColor = Color(0xFFFFA726),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("ventas") }
@@ -125,7 +125,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Cierre de Caja",
                     subtitle = "Reportes y resumen",
-                    icon = Icons.Default.AccountBox,
+                    icon = Icons.Default.Lock,
                     backgroundColor = Color(0xFFFFA726),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("cierre") }
@@ -134,13 +134,14 @@ fun HomeScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Historial button
+            // Historial
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { navController.navigate("historial") },
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -155,7 +156,7 @@ fun HomeScreen(navController: NavHostController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AccountCircle,
+                            imageVector = Icons.Default.Lock,
                             contentDescription = null,
                             tint = Color.White
                         )
@@ -181,11 +182,15 @@ fun HomeScreen(navController: NavHostController) {
 
             // Cerrar sesión
             TextButton(
-                onClick = { navController.navigate("login") },
+                onClick = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = Icons.Default.Email,
+                    imageVector = Icons.Default.Close,
                     contentDescription = null,
                     tint = Color(0xFFFF6B00)
                 )
