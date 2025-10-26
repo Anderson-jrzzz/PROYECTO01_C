@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface VentaDao {
 
+    @Query("SELECT * FROM ventas WHERE (:productoId IS NULL OR productoId = :productoId) AND fecha >= :fechaDesde AND fecha <= :fechaHasta ORDER BY fecha DESC")
+    fun getVentasFiltradas(productoId: Int?, fechaDesde: Long, fechaHasta: Long): Flow<List<Venta>>
+
     @Query("SELECT * FROM ventas ORDER BY fecha DESC")
     fun getAllVentas(): Flow<List<Venta>>
 
