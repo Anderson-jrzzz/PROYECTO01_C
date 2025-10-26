@@ -1,5 +1,6 @@
 package com.bodeapp.uiproyec.screens
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,30 +14,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-
-data class Producto(
-    val id: Int,
-    val nombre: String,
-    val precio: Double,
-    val stock: Int
-)
+import com.bodeapp.model.Producto
+import com.bodeapp.viewmodel.ProductoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductosScreen(navController: NavHostController) {
-    var productos by remember {
-        mutableStateOf(
-            listOf(
-                Producto(1, "coca cola", 1.50, 0)
-            )
-        )
-    }
-    var showDialog by remember { mutableStateOf(false) }
+fun ProductosScreen(
+    navController: NavHostController,
+    viewModel: ProductoViewModel = viewModel()
+) {
+    val productos by viewModel.productos.collectAsState()
+
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
@@ -44,6 +39,9 @@ fun ProductosScreen(navController: NavHostController) {
     var nombreProducto by remember { mutableStateOf("") }
     var precioProducto by remember { mutableStateOf("") }
     var stockProducto by remember { mutableStateOf("") }
+
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
@@ -150,14 +148,16 @@ fun ProductosScreen(navController: NavHostController) {
             // Botón Guardar
             Button(
                 onClick = {
-                    if (nombreProducto.isNotEmpty() && precioProducto.isNotEmpty() && stockProducto.isNotEmpty()) {
+                    if (nombreProducto.isEmpty() || precioProducto.isEmpty() || stockProducto.isEmpty()) {
+                        errorMessage = "Por favor completa todos los campos"
+                        showError = true
+                    } else {
                         val nuevoProducto = Producto(
-                            id = productos.size + 1,
                             nombre = nombreProducto,
                             precio = precioProducto.toDoubleOrNull() ?: 0.0,
                             stock = stockProducto.toIntOrNull() ?: 0
                         )
-                        productos = productos + nuevoProducto
+                        viewModel.insertProducto(nuevoProducto)
                         nombreProducto = ""
                         precioProducto = ""
                         stockProducto = ""
@@ -191,7 +191,7 @@ fun ProductosScreen(navController: NavHostController) {
 
             // Lista de productos
             Text(
-                text = "Últimos productos agregados",
+                text = "Productos registrados (${productos.size})",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF333333)
@@ -199,23 +199,57 @@ fun ProductosScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(productos) { producto ->
-                    ProductoItem(
-                        producto = producto,
-                        onEdit = {
-                            productoSeleccionado = producto
-                            showEditDialog = true
-                        },
-                        onDelete = {
-                            productoSeleccionado = producto
-                            showDeleteDialog = true
-                        }
+            if (productos.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        tint = Color(0xFFE0E0E0),
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No hay productos registrados",
+                        color = Color(0xFF999999),
+                        fontSize = 14.sp
                     )
                 }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(productos) { producto ->
+                        ProductoItem(
+                            producto = producto,
+                            onEdit = {
+                                productoSeleccionado = producto
+                                showEditDialog = true
+                            },
+                            onDelete = {
+                                productoSeleccionado = producto
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
+                }
             }
+        }
+    }
+
+    // Snackbar para errores
+    if (showError) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(2000)
+            showError = false
+        }
+        Snackbar(
+            modifier = Modifier.padding(16.dp),
+            containerColor = Color(0xFFF44336)
+        ) {
+            Text(errorMessage, color = Color.White)
         }
     }
 
@@ -225,22 +259,24 @@ fun ProductosScreen(navController: NavHostController) {
             producto = productoSeleccionado!!,
             onDismiss = { showEditDialog = false },
             onConfirm = { nombre, precio, stock ->
-                productos = productos.map {
-                    if (it.id == productoSeleccionado!!.id) {
-                        it.copy(nombre = nombre, precio = precio, stock = stock)
-                    } else it
-                }
+                viewModel.updateProducto(
+                    productoSeleccionado!!.copy(
+                        nombre = nombre,
+                        precio = precio,
+                        stock = stock
+                    )
+                )
                 showEditDialog = false
             }
         )
     }
 
-    // Mensaje para eliminar
+    // Dialog para eliminar
     if (showDeleteDialog && productoSeleccionado != null) {
         EliminarProductoDialog(
             onDismiss = { showDeleteDialog = false },
             onConfirm = {
-                productos = productos.filter { it.id != productoSeleccionado!!.id }
+                viewModel.deleteProducto(productoSeleccionado!!)
                 showDeleteDialog = false
             }
         )
@@ -277,7 +313,7 @@ fun ProductoItem(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AccountBox,
+                        imageVector = Icons.Default.ShoppingCart,
                         contentDescription = null,
                         tint = Color.White
                     )
@@ -300,7 +336,8 @@ fun ProductoItem(
                         Text(
                             text = "Stock: ${producto.stock}",
                             fontSize = 14.sp,
-                            color = Color(0xFF666666)
+                            color = if (producto.stock > 10) Color(0xFF4CAF50) else Color(0xFFF44336),
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

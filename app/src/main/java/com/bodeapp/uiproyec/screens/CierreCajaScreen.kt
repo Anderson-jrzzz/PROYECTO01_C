@@ -17,27 +17,43 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-
-data class ProductoMasVendido(
-    val nombre: String,
-    val cantidadVendida: Int
-)
+import com.bodeapp.data.ProductoVendido
+import com.bodeapp.viewmodel.VentaViewModel
+import com.bodeapp.viewmodel.CompraViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CierreCajaScreen(navController: NavHostController) {
-    val totalVentas = 45.00
-    val totalCompras = 40.00
+fun CierreCajaScreen(
+    navController: NavHostController,
+    ventaViewModel: VentaViewModel = viewModel(),
+    compraViewModel: CompraViewModel = viewModel()
+) {
+    val totalVentas by ventaViewModel.totalVentas.collectAsState()
+    val totalCompras by compraViewModel.totalCompras.collectAsState()
     val utilidad = totalVentas - totalCompras
 
-    val productosMasVendidos = listOf(
-        ProductoMasVendido("coca cola", 30)
-    )
+    val ventasDelDia by ventaViewModel.ventasDelDia.collectAsState()
+    val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
     )
+
+    // Calcular productos más vendidos manualmente
+    val productosMasVendidos = remember(ventasDelDia) {
+        ventasDelDia
+            .groupBy { it.nombreProducto }
+            .map { (nombre, ventas) ->
+                ProductoVendido(
+                    nombreProducto = nombre,
+                    totalVendido = ventas.sumOf { it.cantidad }
+                )
+            }
+            .sortedByDescending { it.totalVendido }
+            .take(5)
+    }
 
     Column(
         modifier = Modifier
@@ -98,7 +114,7 @@ fun CierreCajaScreen(navController: NavHostController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Menu,
+                            imageVector = Icons.Default.ShoppingCart,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(32.dp)
@@ -190,7 +206,7 @@ fun CierreCajaScreen(navController: NavHostController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AccountCircle,
+                            imageVector = Icons.Default.ShoppingCart,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(32.dp)
@@ -207,7 +223,7 @@ fun CierreCajaScreen(navController: NavHostController) {
                             text = "S/ ${String.format("%.2f", utilidad)}",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2196F3)
+                            color = if (utilidad >= 0) Color(0xFF2196F3) else Color(0xFFF44336)
                         )
                     }
                 }
@@ -225,57 +241,85 @@ fun CierreCajaScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Productos más vendidos",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF666666)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(productosMasVendidos) { producto ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            if (productosMasVendidos.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            tint = Color(0xFFE0E0E0),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "No hay datos de ventas hoy",
+                            color = Color(0xFF999999),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = "Productos más vendidos",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF666666)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(productosMasVendidos.withIndex().toList()) { (index, producto) ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
-                            Box(
+                            Row(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .background(Color(0xFFFFA726), CircleShape),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "1",
-                                    color = Color.White,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = producto.nombre,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF333333)
-                                )
-                                Text(
-                                    text = "Vendidos: ${producto.cantidadVendida}",
-                                    fontSize = 14.sp,
-                                    color = Color(0xFF666666)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(Color(0xFFFFA726), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${index + 1}",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = producto.nombreProducto,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF333333)
+                                    )
+                                    Text(
+                                        text = "Vendidos: ${producto.totalVendido}",
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF666666)
+                                    )
+                                }
                             }
                         }
                     }
@@ -286,7 +330,10 @@ fun CierreCajaScreen(navController: NavHostController) {
 
             // Botón Cerrar Caja
             Button(
-                onClick = {  },
+                onClick = {
+                    // TODO: Implementar lógica de cierre de caja
+                    navController.popBackStack()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

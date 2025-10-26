@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,35 +16,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-
-data class Compra(
-    val id: Int,
-    val producto: String,
-    val cantidad: Int,
-    val costo: Double,
-    val fecha: String
-)
+import com.bodeapp.model.Compra
+import com.bodeapp.model.Producto
+import com.bodeapp.viewmodel.CompraViewModel
+import com.bodeapp.viewmodel.ProductoViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ComprasScreen(navController: NavHostController) {
-    var compras by remember {
-        mutableStateOf(
-            listOf(
-                Compra(1, "coca cola", 30, 40.00, "24/10")
-            )
-        )
-    }
+fun ComprasScreen(
+    navController: NavHostController,
+    productoViewModel: ProductoViewModel = viewModel(),
+    compraViewModel: CompraViewModel = viewModel()
+) {
+    val productos by productoViewModel.productos.collectAsState()
+    val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
 
-    var productoSeleccionado by remember { mutableStateOf("") }
+    var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
     var nuevoProducto by remember { mutableStateOf("") }
     var costo by remember { mutableStateOf("") }
     var cantidad by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var mostrarNuevoProducto by remember { mutableStateOf(false) }
 
-    val productosExistentes = listOf("coca cola")
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var showSuccess by remember { mutableStateOf(false) }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
@@ -101,7 +100,7 @@ fun ComprasScreen(navController: NavHostController) {
                 onExpandedChange = { expanded = !expanded }
             ) {
                 OutlinedTextField(
-                    value = productoSeleccionado,
+                    value = productoSeleccionado?.nombre ?: "",
                     onValueChange = {},
                     readOnly = true,
                     modifier = Modifier
@@ -120,29 +119,40 @@ fun ComprasScreen(navController: NavHostController) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    productosExistentes.forEach { producto ->
-                        DropdownMenuItem(
-                            text = { Text(producto) },
-                            onClick = {
-                                productoSeleccionado = producto
-                                mostrarNuevoProducto = false
-                                expanded = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFF6B00)
-                                )
-                            }
-                        )
+                    if (productos.isNotEmpty()) {
+                        productos.forEach { producto ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(producto.nombre, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "Stock actual: ${producto.stock}",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF666666)
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    productoSeleccionado = producto
+                                    mostrarNuevoProducto = false
+                                    expanded = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFF6B00)
+                                    )
+                                }
+                            )
+                        }
+                        Divider()
                     }
-                    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                     DropdownMenuItem(
                         text = { Text("+ Escribir otro producto/insumo") },
                         onClick = {
                             mostrarNuevoProducto = true
-                            productoSeleccionado = ""
+                            productoSeleccionado = null
                             expanded = false
                         },
                         leadingIcon = {
@@ -203,7 +213,7 @@ fun ComprasScreen(navController: NavHostController) {
             )
             OutlinedTextField(
                 value = cantidad,
-                onValueChange = { cantidad = it },
+                onValueChange = { cantidad = it.filter { char -> char.isDigit() } },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("0") },
                 colors = OutlinedTextFieldDefaults.colors(
@@ -218,22 +228,42 @@ fun ComprasScreen(navController: NavHostController) {
             // Botón Registrar Compra
             Button(
                 onClick = {
-                    val productoFinal = if (mostrarNuevoProducto) nuevoProducto else productoSeleccionado
-                    if (productoFinal.isNotEmpty() && costo.isNotEmpty() && cantidad.isNotEmpty()) {
-                        val nuevaCompra = Compra(
-                            id = compras.size + 1,
-                            producto = productoFinal,
-                            cantidad = cantidad.toIntOrNull() ?: 0,
-                            costo = costo.toDoubleOrNull() ?: 0.0,
-                            fecha = "24/10"
-                        )
-                        compras = compras + nuevaCompra
-                        productoSeleccionado = ""
-                        nuevoProducto = ""
-                        costo = ""
-                        cantidad = ""
-                        mostrarNuevoProducto = false
+                    val productoFinal = if (mostrarNuevoProducto) nuevoProducto else productoSeleccionado?.nombre
+
+                    if (productoFinal.isNullOrEmpty()) {
+                        errorMessage = "Selecciona o escribe un producto"
+                        showError = true
+                        return@Button
                     }
+
+                    if (costo.isEmpty() || cantidad.isEmpty()) {
+                        errorMessage = "Completa todos los campos"
+                        showError = true
+                        return@Button
+                    }
+
+                    val nuevaCompra = Compra(
+                        productoId = productoSeleccionado?.id,
+                        nombreProducto = productoFinal,
+                        cantidad = cantidad.toIntOrNull() ?: 0,
+                        costo = costo.toDoubleOrNull() ?: 0.0
+                    )
+
+                    compraViewModel.registrarCompra(
+                        compra = nuevaCompra,
+                        onSuccess = {
+                            showSuccess = true
+                            productoSeleccionado = null
+                            nuevoProducto = ""
+                            costo = ""
+                            cantidad = ""
+                            mostrarNuevoProducto = false
+                        },
+                        onError = { error ->
+                            errorMessage = error
+                            showError = true
+                        }
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -262,7 +292,7 @@ fun ComprasScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             // Lista de compras
-            if (compras.isEmpty()) {
+            if (comprasDelDia.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -282,7 +312,7 @@ fun ComprasScreen(navController: NavHostController) {
                 }
             } else {
                 Text(
-                    text = "Compras recientes",
+                    text = "Compras recientes (${comprasDelDia.size})",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF333333)
@@ -293,10 +323,50 @@ fun ComprasScreen(navController: NavHostController) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(compras) { compra ->
+                    items(comprasDelDia) { compra ->
                         CompraItem(compra)
                     }
                 }
+            }
+        }
+    }
+
+    // Snackbars
+    if (showError) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(3000)
+            showError = false
+        }
+    }
+
+    if (showSuccess) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(2000)
+            showSuccess = false
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        if (showError) {
+            Snackbar(
+                containerColor = Color(0xFFF44336),
+                contentColor = Color.White
+            ) {
+                Text(errorMessage)
+            }
+        }
+
+        if (showSuccess) {
+            Snackbar(
+                containerColor = Color(0xFF4CAF50),
+                contentColor = Color.White
+            ) {
+                Text("✓ Compra registrada exitosamente")
             }
         }
     }
@@ -304,6 +374,9 @@ fun ComprasScreen(navController: NavHostController) {
 
 @Composable
 fun CompraItem(compra: Compra) {
+    val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
+    val fecha = dateFormat.format(Date(compra.fecha))
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -335,7 +408,7 @@ fun CompraItem(compra: Compra) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = compra.producto,
+                        text = compra.nombreProducto,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF333333)
@@ -361,14 +434,14 @@ fun CompraItem(compra: Compra) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Clear,
+                    imageVector = Icons.Default.DateRange,
                     contentDescription = null,
                     tint = Color(0xFF999999),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = compra.fecha,
+                    text = fecha,
                     fontSize = 12.sp,
                     color = Color(0xFF999999)
                 )
