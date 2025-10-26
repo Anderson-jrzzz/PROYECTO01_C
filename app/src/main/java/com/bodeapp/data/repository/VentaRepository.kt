@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 
 class VentaRepository(private val ventaDao: VentaDao) {
+    fun getVentasFiltradas(productoId: Int?, fechaDesde: Long, fechaHasta: Long): Flow<List<Venta>> {
+        return ventaDao.getVentasFiltradas(productoId, fechaDesde, fechaHasta)
+    }
 
     val allVentas: Flow<List<Venta>> = ventaDao.getAllVentas()
 
