@@ -20,8 +20,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
-            BodeAppNavHost(navController = navController)
+            BodeAppTheme {
+                val navController = rememberNavController()
+                BodeAppNavHost(navController = navController)
+            }
         }
     }
 }
