@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -57,7 +58,8 @@ fun HistorialScreen(
     ventaViewModel: VentaViewModel = viewModel(),
     compraViewModel: CompraViewModel = viewModel()
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableStateOf(0) }
+
     val tabs = listOf("Todos", "Ventas", "Compras")
 
     val ventasDelDia by ventaViewModel.ventasDelDia.collectAsState()
@@ -93,44 +95,45 @@ fun HistorialScreen(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
     )
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFF5F5F5)),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(orangeGradient)
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(orangeGradient)
+                    .padding(16.dp)
             ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Historial",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Historial",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-        ) {
+        item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Card(
@@ -183,48 +186,50 @@ fun HistorialScreen(
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color.White,
-                contentColor = Color(0xFFFF6B00),
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = Color(0xFFFF6B00)
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = {
-                            Text(
-                                text = title,
-                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    )
+        item {
+            Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.White,
+                    contentColor = Color(0xFFFF6B00),
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            color = Color(0xFFFF6B00)
+                        )
+                    }
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = {
+                                Text(
+                                    text = title,
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        val transaccionesFiltradas = when (selectedTab) {
+            0 -> todasTransacciones
+            1 -> todasTransacciones.filterIsInstance<TransaccionHistorial.TransaccionVenta>()
+            2 -> todasTransacciones.filterIsInstance<TransaccionHistorial.TransaccionCompra>()
+            else -> todasTransacciones
+        }
 
-            val transaccionesFiltradas = when (selectedTab) {
-                0 -> todasTransacciones
-                1 -> todasTransacciones.filterIsInstance<TransaccionHistorial.TransaccionVenta>()
-                2 -> todasTransacciones.filterIsInstance<TransaccionHistorial.TransaccionCompra>()
-                else -> todasTransacciones
-            }
-
-            if (transaccionesFiltradas.isEmpty()) {
+        if (transaccionesFiltradas.isEmpty()) {
+            item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 32.dp),
+                        .padding(horizontal = 24.dp, vertical = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
@@ -240,13 +245,11 @@ fun HistorialScreen(
                         fontSize = 14.sp
                     )
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(transaccionesFiltradas) { transaccion ->
-                        TransaccionHistorialItem(transaccion)
-                    }
+            }
+        } else {
+            items(transaccionesFiltradas) { transaccion ->
+                Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    TransaccionHistorialItem(transaccion)
                 }
             }
         }

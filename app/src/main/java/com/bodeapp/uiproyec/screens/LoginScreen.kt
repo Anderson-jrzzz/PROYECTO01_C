@@ -23,16 +23,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavHostController) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
-    var showError by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var showError by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by rememberSaveable { mutableStateOf("") }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(
@@ -49,6 +51,7 @@ fun LoginScreen(navController: NavHostController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -156,37 +159,7 @@ fun LoginScreen(navController: NavHostController) {
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Remember me y Forgot password
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFFFF6B00)
-                        )
-                    )
-                    Text(
-                        text = "Recordarme",
-                        fontSize = 14.sp,
-                        color = Color(0xFF666666)
-                    )
-                }
-
-                TextButton(onClick = { /* TODO: Implementar recuperación de contraseña */ }) {
-                    Text(
-                        text = "¿Olvidaste tu contraseña?",
-                        color = Color(0xFFFF6B00),
-                        fontSize = 14.sp
-                    )
-                }
-            }
+            // Espacio antes del botón de inicio de sesión
 
             Spacer(modifier = Modifier.height(24.dp))
 
