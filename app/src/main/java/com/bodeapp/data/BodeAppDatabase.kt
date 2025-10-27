@@ -11,9 +11,10 @@ import com.bodeapp.model.*
         Producto::class,
         Venta::class,
         Compra::class,
-        Usuario::class
+        Usuario::class,
+        CierreCaja::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class BodeAppDatabase : RoomDatabase() {
@@ -22,6 +23,7 @@ abstract class BodeAppDatabase : RoomDatabase() {
     abstract fun ventaDao(): VentaDao
     abstract fun compraDao(): CompraDao
     abstract fun usuarioDao(): UsuarioDao
+    abstract fun cierreCajaDao(): CierreCajaDao
 
     companion object {
         @Volatile
