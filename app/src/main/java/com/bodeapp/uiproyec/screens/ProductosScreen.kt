@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.bodeapp.model.Producto
 import com.bodeapp.viewmodel.ProductoViewModel
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,16 +33,16 @@ fun ProductosScreen(
 ) {
     val productos by viewModel.productos.collectAsState()
 
-    var showEditDialog by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
 
-    var nombreProducto by remember { mutableStateOf("") }
-    var precioProducto by remember { mutableStateOf("") }
-    var stockProducto by remember { mutableStateOf("") }
+    var nombreProducto by rememberSaveable { mutableStateOf("") }
+    var precioProducto by rememberSaveable { mutableStateOf("") }
+    var stockProducto by rememberSaveable { mutableStateOf("") }
 
-    var showError by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
+    var showError by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by rememberSaveable { mutableStateOf("") }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
@@ -78,162 +79,157 @@ fun ProductosScreen(
                 )
             }
         }
-
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Formulario
-            Text(
-                text = "Nombre del producto",
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            OutlinedTextField(
-                value = nombreProducto,
-                onValueChange = { nombreProducto = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Ej: Coca Cola 1L") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFF6B00),
-                    unfocusedBorderColor = Color(0xFFE0E0E0)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
+            item {
+                Text(
+                    text = "Nombre del producto",
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = nombreProducto,
+                    onValueChange = { nombreProducto = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Ej: Coca Cola 1L") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFFF6B00),
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Text(
+                    text = "Precio de venta (S/)",
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = precioProducto,
+                    onValueChange = { precioProducto = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("0.00") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFFF6B00),
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
 
-            Text(
-                text = "Precio de venta (S/)",
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            OutlinedTextField(
-                value = precioProducto,
-                onValueChange = { precioProducto = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("0.00") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFF6B00),
-                    unfocusedBorderColor = Color(0xFFE0E0E0)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
+            item {
+                Text(
+                    text = "Stock inicial",
+                    fontSize = 14.sp,
+                    color = Color(0xFF666666),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = stockProducto,
+                    onValueChange = { stockProducto = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("0") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFFF6B00),
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Stock inicial",
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            OutlinedTextField(
-                value = stockProducto,
-                onValueChange = { stockProducto = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("0") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFF6B00),
-                    unfocusedBorderColor = Color(0xFFE0E0E0)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Botón Guardar
-            Button(
-                onClick = {
-                    if (nombreProducto.isEmpty() || precioProducto.isEmpty() || stockProducto.isEmpty()) {
-                        errorMessage = "Por favor completa todos los campos"
-                        showError = true
-                    } else {
-                        val nuevoProducto = Producto(
-                            nombre = nombreProducto,
-                            precio = precioProducto.toDoubleOrNull() ?: 0.0,
-                            stock = stockProducto.toIntOrNull() ?: 0
-                        )
-                        viewModel.insertProducto(nuevoProducto)
-                        nombreProducto = ""
-                        precioProducto = ""
-                        stockProducto = ""
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                contentPadding = PaddingValues(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Box(
+            item {
+                Button(
+                    onClick = {
+                        if (nombreProducto.isEmpty() || precioProducto.isEmpty() || stockProducto.isEmpty()) {
+                            errorMessage = "Por favor completa todos los campos"
+                            showError = true
+                        } else {
+                            val nuevoProducto = Producto(
+                                nombre = nombreProducto,
+                                precio = precioProducto.toDoubleOrNull() ?: 0.0,
+                                stock = stockProducto.toIntOrNull() ?: 0
+                            )
+                            viewModel.insertProducto(nuevoProducto)
+                            nombreProducto = ""
+                            precioProducto = ""
+                            stockProducto = ""
+                        }
+                    },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(orangeGradient),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    contentPadding = PaddingValues(),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Guardar Producto",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(orangeGradient),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Guardar Producto",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Lista de productos
-            Text(
-                text = "Productos registrados (${productos.size})",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Text(
+                    text = "Productos registrados (${productos.size})",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+            }
 
             if (productos.isEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = Color(0xFFE0E0E0),
-                        modifier = Modifier.size(80.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No hay productos registrados",
-                        color = Color(0xFF999999),
-                        fontSize = 14.sp
-                    )
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(productos) { producto ->
-                        ProductoItem(
-                            producto = producto,
-                            onEdit = {
-                                productoSeleccionado = producto
-                                showEditDialog = true
-                            },
-                            onDelete = {
-                                productoSeleccionado = producto
-                                showDeleteDialog = true
-                            }
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = Color(0xFFE0E0E0),
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No hay productos registrados",
+                            color = Color(0xFF999999),
+                            fontSize = 14.sp
                         )
                     }
+                }
+            } else {
+                items(productos) { producto ->
+                    ProductoItem(
+                        producto = producto,
+                        onEdit = {
+                            productoSeleccionado = producto
+                            showEditDialog = true
+                        },
+                        onDelete = {
+                            productoSeleccionado = producto
+                            showDeleteDialog = true
+                        }
+                    )
                 }
             }
         }
