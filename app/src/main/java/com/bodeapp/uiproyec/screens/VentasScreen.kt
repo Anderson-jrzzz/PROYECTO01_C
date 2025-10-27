@@ -647,14 +647,6 @@ fun VentasScreen(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Filtros de ventas
-        FiltrosVentas(
-            productos = productos,
-            ventasFiltradas = ventasFiltradas,
-            onFiltrar = { productoId, fechaDesde, fechaHasta ->
-                ventaViewModel.filtrarVentas(productoId, fechaDesde, fechaHasta)
-            }
-        )
         // Header
         Box(
             modifier = Modifier
@@ -680,223 +672,211 @@ fun VentasScreen(
             }
         }
 
-        Column(
+        // Contenido con scroll
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Selector de producto
-            Text(
-                text = "Seleccionar producto",
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            item {
+                Column {
+                    Text(
+                        text = "Seleccionar producto",
+                        fontSize = 14.sp,
+                        color = Color(0xFF666666),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    value = productoSeleccionado?.let { "${it.nombre} (Stock: ${it.stock})" } ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                    placeholder = { Text("Elige un producto") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFF6B00),
-                        unfocusedBorderColor = Color(0xFFE0E0E0)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    if (productos.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("No hay productos registrados") },
-                            onClick = {}
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = productoSeleccionado?.let { "${it.nombre} (Stock: ${it.stock})" } ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            placeholder = { Text("Elige un producto") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFFF6B00),
+                                unfocusedBorderColor = Color(0xFFE0E0E0)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                    } else {
-                        productos.forEach { producto ->
-                            DropdownMenuItem(
-                                text = {
-                                    Column {
-                                        Text(producto.nombre, fontWeight = FontWeight.Bold)
-                                        Text(
-                                            "Stock: ${producto.stock} - S/ ${String.format("%.2f", producto.precio)}",
-                                            fontSize = 12.sp,
-                                            color = Color(0xFF666666)
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    productoSeleccionado = producto
-                                    expanded = false
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = null,
-                                        tint = Color(0xFFFF6B00)
+
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            if (productos.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("No hay productos registrados") },
+                                    onClick = {}
+                                )
+                            } else {
+                                productos.forEach { producto ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(producto.nombre, fontWeight = FontWeight.Bold)
+                                                Text(
+                                                    "Stock: ${producto.stock} - S/ ${String.format("%.2f", producto.precio)}",
+                                                    fontSize = 12.sp,
+                                                    color = Color(0xFF666666)
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            productoSeleccionado = producto
+                                            expanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Edit,
+                                                contentDescription = null,
+                                                tint = Color(0xFFFF6B00)
+                                            )
+                                        }
                                     )
                                 }
-                            )
+                            }
                         }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Cantidad
-            Text(
-                text = "Cantidad",
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            item {
+                Column {
+                    Text(
+                        text = "Cantidad",
+                        fontSize = 14.sp,
+                        color = Color(0xFF666666),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-            OutlinedTextField(
-                value = cantidad,
-                onValueChange = { cantidad = it.filter { char -> char.isDigit() } },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("0") },
-                enabled = productoSeleccionado != null,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFF6B00),
-                    unfocusedBorderColor = Color(0xFFE0E0E0)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+                    OutlinedTextField(
+                        value = cantidad,
+                        onValueChange = { cantidad = it.filter { char -> char.isDigit() } },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("0") },
+                        enabled = productoSeleccionado != null,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFFF6B00),
+                            unfocusedBorderColor = Color(0xFFE0E0E0)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            }
 
             // Subtotal
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Subtotal",
-                        fontSize = 14.sp,
-                        color = Color(0xFF666666)
-                    )
-                    Text(
-                        text = "S/ ${String.format("%.2f", subtotal)}",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFF6B00)
-                    )
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Subtotal",
+                            fontSize = 14.sp,
+                            color = Color(0xFF666666)
+                        )
+                        Text(
+                            text = "S/ ${String.format("%.2f", subtotal)}",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF6B00)
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Botón Registrar Venta
-            Button(
-                onClick = {
-                    if (productoSeleccionado == null) {
-                        errorMessage = "Selecciona un producto"
-                        showError = true
-                        return@Button
-                    }
-
-                    val cant = cantidad.toIntOrNull()
-                    if (cant == null || cant <= 0) {
-                        errorMessage = "Ingresa una cantidad válida"
-                        showError = true
-                        return@Button
-                    }
-
-                    val producto = productoSeleccionado!!
-                    val nuevaVenta = Venta(
-                        productoId = producto.id,
-                        nombreProducto = producto.nombre,
-                        cantidad = cant,
-                        precioUnitario = producto.precio,
-                        total = subtotal
-                    )
-
-                    ventaViewModel.registrarVenta(
-                        venta = nuevaVenta,
-                        onSuccess = {
-                            showSuccess = true
-                            productoSeleccionado = null
-                            cantidad = ""
-                            subtotal = 0.0
-                        },
-                        onError = { error ->
-                            errorMessage = error
+            item {
+                Button(
+                    onClick = {
+                        if (productoSeleccionado == null) {
+                            errorMessage = "Selecciona un producto"
                             showError = true
+                            return@Button
                         }
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Box(
+
+                        val cant = cantidad.toIntOrNull()
+                        if (cant == null || cant <= 0) {
+                            errorMessage = "Ingresa una cantidad válida"
+                            showError = true
+                            return@Button
+                        }
+
+                        val producto = productoSeleccionado!!
+                        val nuevaVenta = Venta(
+                            productoId = producto.id,
+                            nombreProducto = producto.nombre,
+                            cantidad = cant,
+                            precioUnitario = producto.precio,
+                            total = subtotal
+                        )
+
+                        ventaViewModel.registrarVenta(
+                            venta = nuevaVenta,
+                            onSuccess = {
+                                showSuccess = true
+                                productoSeleccionado = null
+                                cantidad = ""
+                                subtotal = 0.0
+                            },
+                            onError = { error ->
+                                errorMessage = error
+                                showError = true
+                            }
+                        )
+                    },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(orangeGradient),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Registrar Venta",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(orangeGradient),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Registrar Venta",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Lista de ventas filtradas
-            if (ventasFiltradas.isEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = Color(0xFFE0E0E0),
-                        modifier = Modifier.size(80.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Aún no hay ventas registradas",
-                        color = Color(0xFF999999),
-                        fontSize = 14.sp
-                    )
-                }
-            } else {
-                Text(
-                    text = "Ventas encontradas (${ventasFiltradas.size})",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF333333)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(ventasFiltradas) { venta ->
-                        VentaItem(venta)
+            // Filtros de ventas
+            item {
+                FiltrosVentas(
+                    productos = productos,
+                    ventasFiltradas = ventasFiltradas,
+                    onFiltrar = { productoId, fechaDesde, fechaHasta ->
+                        ventaViewModel.filtrarVentas(productoId, fechaDesde, fechaHasta)
                     }
-                }
+                )
+            }
+
+
+
+            // Items de ventas
+            items(ventasFiltradas) { venta ->
+                VentaItem(venta)
             }
         }
     }
