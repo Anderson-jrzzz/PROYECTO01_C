@@ -21,4 +21,7 @@ interface CompraDao {
 
     @Delete
     suspend fun deleteCompra(compra: Compra)
+
+    @Query("DELETE FROM compras WHERE fecha >= :inicioDelDia")
+    suspend fun deleteComprasDelDia(inicioDelDia: Long)
 }

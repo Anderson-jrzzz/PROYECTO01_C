@@ -500,7 +500,7 @@ fun CierreCajaScreen(
                             totalCompras = totalCompras,
                             onSuccess = {
                                 val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
-                                successMessage = "Cierre generado: $fecha"
+                                successMessage = "Cierre generado y datos reiniciados: $fecha"
                                 showSuccess = true
                             },
                             onError = { err ->

@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bodeapp.data.BodeAppDatabase
 import com.bodeapp.data.repository.CierreCajaRepository
+import com.bodeapp.data.repository.CompraRepository
+import com.bodeapp.data.repository.VentaRepository
 import com.bodeapp.model.CierreCaja
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +18,8 @@ import java.util.Locale
 
 class CierreCajaViewModel(application: Application) : AndroidViewModel(application) {
     private val cierreRepository: CierreCajaRepository
+    private val ventaRepository: VentaRepository
+    private val compraRepository: CompraRepository
 
     private val _cierres = MutableStateFlow<List<CierreCaja>>(emptyList())
     val cierres: StateFlow<List<CierreCaja>> = _cierres.asStateFlow()
@@ -24,8 +28,10 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
     private var filtroHasta: Long? = null
 
     init {
-        val dao = BodeAppDatabase.getDatabase(application).cierreCajaDao()
-        cierreRepository = CierreCajaRepository(dao)
+        val db = BodeAppDatabase.getDatabase(application)
+        cierreRepository = CierreCajaRepository(db.cierreCajaDao())
+        ventaRepository = VentaRepository(db.ventaDao())
+        compraRepository = CompraRepository(db.compraDao())
 
         viewModelScope.launch {
             cierreRepository.getAll().collect { lista ->
@@ -43,7 +49,13 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
                     utilidad = totalVentas - totalCompras,
                 )
                 cierreRepository.insert(cierre)
-                onSuccess()
+                try {
+                    ventaRepository.deleteVentasDelDia()
+                    compraRepository.deleteComprasDelDia()
+                    onSuccess()
+                } catch (e: Exception) {
+                    onError("Cierre generado, pero error al reiniciar datos: ${e.message}")
+                }
             } catch (e: Exception) {
                 onError("Error al generar cierre: ${e.message}")
             }
