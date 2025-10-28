@@ -26,15 +26,46 @@ import androidx.navigation.NavHostController
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bodeapp.viewmodel.UsuarioViewModel
+import com.bodeapp.viewmodel.LoginResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(
+    navController: NavHostController,
+    viewModel: UsuarioViewModel = viewModel()
+) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var showError by rememberSaveable { mutableStateOf(false) }
     var errorMessage by rememberSaveable { mutableStateOf("") }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+
+    val loginResult by viewModel.loginResult.collectAsState()
+
+    // Observar el resultado del login
+    LaunchedEffect(loginResult) {
+        when (val result = loginResult) {
+            is LoginResult.Success -> {
+                isLoading = false
+                viewModel.resetLoginResult()
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+            is LoginResult.Error -> {
+                isLoading = false
+                errorMessage = result.message
+                showError = true
+                viewModel.resetLoginResult()
+            }
+            null -> {
+                // No hacer nada
+            }
+        }
+    }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(
@@ -177,11 +208,9 @@ fun LoginScreen(navController: NavHostController) {
                             showError = true
                         }
                         else -> {
-                            // Login exitoso (sin validación real por ahora)
-                            navController.navigate("home") {
-                                // Limpiar el back stack para que no pueda volver al login con el botón atrás
-                                popUpTo("login") { inclusive = true }
-                            }
+                            // Validar credenciales en la base de datos
+                            isLoading = true
+                            viewModel.login(email, password)
                         }
                     }
                 },
@@ -200,12 +229,19 @@ fun LoginScreen(navController: NavHostController) {
                         .background(orangeGradient),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Iniciar Sesión",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Iniciar Sesión",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 

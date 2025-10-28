@@ -21,10 +21,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bodeapp.viewmodel.UsuarioViewModel
+import com.bodeapp.viewmodel.RegisterResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavHostController) {
+fun RegisterScreen(
+    navController: NavHostController,
+    viewModel: UsuarioViewModel = viewModel()
+) {
     var fullName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var storeName by rememberSaveable { mutableStateOf("") }
@@ -37,6 +43,33 @@ fun RegisterScreen(navController: NavHostController) {
     var showError by rememberSaveable { mutableStateOf(false) }
     var errorMessage by rememberSaveable { mutableStateOf("") }
     var showSuccess by rememberSaveable { mutableStateOf(false) }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+
+    val registerResult by viewModel.registerResult.collectAsState()
+
+    // Observar el resultado del registro
+    LaunchedEffect(registerResult) {
+        when (val result = registerResult) {
+            is RegisterResult.Success -> {
+                isLoading = false
+                showSuccess = true
+                kotlinx.coroutines.delay(2000)
+                viewModel.resetRegisterResult()
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+            is RegisterResult.Error -> {
+                isLoading = false
+                errorMessage = result.message
+                showError = true
+                viewModel.resetRegisterResult()
+            }
+            null -> {
+                // No hacer nada
+            }
+        }
+    }
 
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
@@ -305,15 +338,14 @@ fun RegisterScreen(navController: NavHostController) {
                             showError = true
                         }
                         else -> {
-                            // Registro exitoso
-                            showSuccess = true
-                            // Navegar al home después de 2 segundos
-                            kotlinx.coroutines.MainScope().launch {
-                                kotlinx.coroutines.delay(2000)
-                                navController.navigate("home") {
-                                    popUpTo("login") { inclusive = true }
-                                }
-                            }
+                            // Registrar usuario en la base de datos
+                            isLoading = true
+                            viewModel.register(
+                                nombreCompleto = fullName,
+                                email = email,
+                                nombreTienda = storeName,
+                                password = password
+                            )
                         }
                     }
                 },
@@ -332,12 +364,19 @@ fun RegisterScreen(navController: NavHostController) {
                         .background(orangeGradient),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Registrarme",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Registrarme",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
