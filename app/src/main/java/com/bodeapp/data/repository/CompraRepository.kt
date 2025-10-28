@@ -27,6 +27,11 @@ class CompraRepository(private val compraDao: CompraDao) {
         compraDao.deleteCompra(compra)
     }
 
+    suspend fun deleteComprasDelDia() {
+        val inicioDelDia = getStartOfDay()
+        compraDao.deleteComprasDelDia(inicioDelDia)
+    }
+
     private fun getStartOfDay(): Long {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)

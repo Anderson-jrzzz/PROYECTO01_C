@@ -36,6 +36,11 @@ class VentaRepository(private val ventaDao: VentaDao) {
         ventaDao.deleteVenta(venta)
     }
 
+    suspend fun deleteVentasDelDia() {
+        val inicioDelDia = getStartOfDay()
+        ventaDao.deleteVentasDelDia(inicioDelDia)
+    }
+
     private fun getStartOfDay(): Long {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)

@@ -188,18 +188,22 @@ fun ComprasScreen(
             }
         }
 
-        // Costo
+        // Costo unitario
         item {
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Text(
-                    text = "Costo (S/)",
+                    text = "Costo unitario (S/)",
                     fontSize = 14.sp,
                     color = Color(0xFF666666),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
                     value = costo,
-                    onValueChange = { costo = it },
+                    onValueChange = { input ->
+                        // Permitir solo dígitos y un punto decimal
+                        val filtered = input.filter { ch -> ch.isDigit() || ch == '.' }
+                        costo = filtered
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("0.00") },
                     colors = OutlinedTextFieldDefaults.colors(
@@ -234,6 +238,43 @@ fun ComprasScreen(
             }
         }
 
+        // Total calculado (preview)
+        item {
+            val totalCalculado by remember(costo, cantidad) {
+                derivedStateOf {
+                    val cu = costo.toDoubleOrNull() ?: 0.0
+                    val cant = cantidad.toIntOrNull() ?: 0
+                    cu * cant
+                }
+            }
+            Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFE8F5E9)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Total (S/)",
+                            color = Color(0xFF666666),
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "S/ ${String.format("%.2f", totalCalculado)}",
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            }
+        }
+
         // Botón Registrar Compra
         item {
             Box(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -253,11 +294,28 @@ fun ComprasScreen(
                             return@Button
                         }
 
+                        val cantidadInt = cantidad.toIntOrNull() ?: 0
+                        val costoUnit = costo.toDoubleOrNull() ?: 0.0
+
+                        if (cantidadInt <= 0) {
+                            errorMessage = "La cantidad debe ser mayor a 0"
+                            showError = true
+                            return@Button
+                        }
+
+                        if (costoUnit <= 0.0) {
+                            errorMessage = "El costo unitario debe ser mayor a 0"
+                            showError = true
+                            return@Button
+                        }
+
+                        val costoTotal = costoUnit * cantidadInt
+
                         val nuevaCompra = Compra(
                             productoId = selectedProductoId,
                             nombreProducto = productoFinal,
-                            cantidad = cantidad.toIntOrNull() ?: 0,
-                            costo = costo.toDoubleOrNull() ?: 0.0
+                            cantidad = cantidadInt,
+                            costo = costoTotal
                         )
 
                         compraViewModel.registrarCompra(
