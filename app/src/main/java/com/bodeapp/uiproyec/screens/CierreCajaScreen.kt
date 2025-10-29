@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +27,7 @@ import com.bodeapp.util.UserSessionManager
 import com.bodeapp.viewmodel.VentaViewModel
 import com.bodeapp.viewmodel.CompraViewModel
 import com.bodeapp.viewmodel.CierreCajaViewModel
+//import com.bodeapp.viewmodel.reiniciarContadores
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,7 +43,7 @@ fun CierreCajaScreen(
     val context = LocalContext.current
     val sessionManager = remember { UserSessionManager.getInstance(context) }
     val usuarioId = sessionManager.getUserId()
-    
+
     val totalVentas by ventaViewModel.totalVentas.collectAsState()
     val totalCompras by compraViewModel.totalCompras.collectAsState()
     val utilidad = totalVentas - totalCompras
@@ -412,12 +414,21 @@ fun CierreCajaScreen(
 
             // Filtro por fecha
             item {
-                Text(
-                    text = "Historial de cierres",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF333333)
-                )
+                Column {
+                    Text(
+                        text = "Nota: Al generar el cierre, se registrará el resumen del día sin afectar los datos históricos.",
+                        fontSize = 13.sp,
+                        color = Color(0xFF666666),
+                        fontStyle = FontStyle.Italic,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "Historial de cierres",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF333333)
+                    )
+                }
             }
             item {
                 Row(
@@ -514,8 +525,13 @@ fun CierreCajaScreen(
                             totalVentas = totalVentas,
                             totalCompras = totalCompras,
                             onSuccess = {
+                                // Reiniciar los contadores en los ViewModels
+                                ventaViewModel.reiniciarContadores()
+                                compraViewModel.reiniciarContadores()
+                                cierreCajaViewModel.reiniciarContadores()
+
                                 val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
-                                successMessage = "Cierre generado y datos reiniciados: $fecha"
+                                successMessage = "Cierre generado correctamente: $fecha"
                                 showSuccess = true
                             },
                             onError = { err ->

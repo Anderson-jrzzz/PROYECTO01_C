@@ -78,6 +78,16 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
         cargarVentas()
     }
 
+    /**
+     * Reinicia los contadores de ventas del día
+     */
+    fun reiniciarContadores() {
+        viewModelScope.launch {
+            _totalVentas.value = 0.0
+            _ventasDelDia.value = emptyList()
+        }
+    }
+
     fun filtrarVentas(productoId: Int?, fechaDesde: String, fechaHasta: String) {
         viewModelScope.launch {
             try {
