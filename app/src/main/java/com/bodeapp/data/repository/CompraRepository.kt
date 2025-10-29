@@ -21,6 +21,11 @@ class CompraRepository(private val compraDao: CompraDao) {
         return compraDao.getTotalComprasDelDia(usuarioId, inicioDelDia)
     }
 
+    fun getComprasDeLaSemana(usuarioId: Int): Flow<List<Compra>> {
+        val inicioSemana = getStartOfWeek()
+        return compraDao.getComprasDeLaSemana(usuarioId, inicioSemana)
+    }
+
     suspend fun insertCompra(compra: Compra): Long {
         return compraDao.insertCompra(compra)
     }
@@ -36,6 +41,16 @@ class CompraRepository(private val compraDao: CompraDao) {
 
     private fun getStartOfDay(): Long {
         val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
+    private fun getStartOfWeek(): Long {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)

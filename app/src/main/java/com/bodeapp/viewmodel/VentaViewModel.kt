@@ -34,8 +34,16 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
     private val _totalVentas = MutableStateFlow(0.0)
     val totalVentas: StateFlow<Double> = _totalVentas.asStateFlow()
 
+    private val _conteoVentas = MutableStateFlow(0)
+    val conteoVentas: StateFlow<Int> = _conteoVentas.asStateFlow()
+
+    private val _productosMasVendidos = MutableStateFlow<List<com.bodeapp.data.ProductoVendido>>(emptyList())
+    val productosMasVendidos: StateFlow<List<com.bodeapp.data.ProductoVendido>> = _productosMasVendidos.asStateFlow()
+
     private var ventasJob: kotlinx.coroutines.Job? = null
     private var totalJob: kotlinx.coroutines.Job? = null
+    private var conteoJob: kotlinx.coroutines.Job? = null
+    private var productosJob: kotlinx.coroutines.Job? = null
 
     init {
         val ventaDao = BodeAppDatabase.getDatabase(application).ventaDao()
@@ -50,6 +58,8 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
     private fun cargarVentas() {
         ventasJob?.cancel()
         totalJob?.cancel()
+        conteoJob?.cancel()
+        productosJob?.cancel()
 
         ventasJob = viewModelScope.launch {
             val usuarioId = sessionManager.getUserId()
@@ -72,6 +82,28 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
                 _totalVentas.value = 0.0
             }
         }
+
+        conteoJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                ventaRepository.getConteoVentasDelDia(usuarioId).collect { conteo ->
+                    _conteoVentas.value = conteo
+                }
+            } else {
+                _conteoVentas.value = 0
+            }
+        }
+
+        productosJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                ventaRepository.getProductosMasVendidos(usuarioId).collect { productos ->
+                    _productosMasVendidos.value = productos
+                }
+            } else {
+                _productosMasVendidos.value = emptyList()
+            }
+        }
     }
 
     fun refrescarVentas() {
@@ -85,6 +117,8 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _totalVentas.value = 0.0
             _ventasDelDia.value = emptyList()
+            _conteoVentas.value = 0
+            _productosMasVendidos.value = emptyList()
         }
     }
 
