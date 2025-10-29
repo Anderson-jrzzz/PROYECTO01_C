@@ -19,6 +19,9 @@ interface VentaDao {
     @Query("SELECT SUM(total) FROM ventas WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia")
     fun getTotalVentasDelDia(usuarioId: Int, inicioDelDia: Long): Flow<Double?>
 
+    @Query("SELECT COUNT(*) FROM ventas WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia")
+    fun getConteoVentasDelDia(usuarioId: Int, inicioDelDia: Long): Flow<Int>
+
     @Query("SELECT nombreProducto, SUM(cantidad) as totalVendido FROM ventas WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia GROUP BY nombreProducto ORDER BY totalVendido DESC LIMIT 5")
     fun getProductosMasVendidos(usuarioId: Int, inicioDelDia: Long): Flow<List<ProductoVendido>>
 

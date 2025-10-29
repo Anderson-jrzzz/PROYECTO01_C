@@ -25,8 +25,12 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
     private val _totalCompras = MutableStateFlow(0.0)
     val totalCompras: StateFlow<Double> = _totalCompras.asStateFlow()
 
+    private val _comprasSemana = MutableStateFlow<List<Compra>>(emptyList())
+    val comprasSemana: StateFlow<List<Compra>> = _comprasSemana.asStateFlow()
+
     private var comprasJob: kotlinx.coroutines.Job? = null
     private var totalJob: kotlinx.coroutines.Job? = null
+    private var semanaJob: kotlinx.coroutines.Job? = null
 
     init {
         val compraDao = BodeAppDatabase.getDatabase(application).compraDao()
@@ -41,6 +45,7 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
     private fun cargarCompras() {
         comprasJob?.cancel()
         totalJob?.cancel()
+        semanaJob?.cancel()
 
         comprasJob = viewModelScope.launch {
             val usuarioId = sessionManager.getUserId()
@@ -63,6 +68,17 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
                 _totalCompras.value = 0.0
             }
         }
+
+        semanaJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                compraRepository.getComprasDeLaSemana(usuarioId).collect { compras ->
+                    _comprasSemana.value = compras
+                }
+            } else {
+                _comprasSemana.value = emptyList()
+            }
+        }
     }
 
     fun refrescarCompras() {
@@ -76,6 +92,7 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _totalCompras.value = 0.0
             _comprasDelDia.value = emptyList()
+            _comprasSemana.value = emptyList()
         }
     }
 

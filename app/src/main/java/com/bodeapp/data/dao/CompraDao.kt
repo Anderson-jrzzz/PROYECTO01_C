@@ -16,6 +16,9 @@ interface CompraDao {
     @Query("SELECT SUM(costo) FROM compras WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia")
     fun getTotalComprasDelDia(usuarioId: Int, inicioDelDia: Long): Flow<Double?>
 
+    @Query("SELECT * FROM compras WHERE usuarioId = :usuarioId AND fecha >= :inicioSemana ORDER BY fecha DESC")
+    fun getComprasDeLaSemana(usuarioId: Int, inicioSemana: Long): Flow<List<Compra>>
+
     @Insert
     suspend fun insertCompra(compra: Compra): Long
 

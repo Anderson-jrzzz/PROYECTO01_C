@@ -72,6 +72,9 @@ fun HistorialScreen(
     val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
     val totalVentas by ventaViewModel.totalVentas.collectAsState()
     val totalCompras by compraViewModel.totalCompras.collectAsState()
+    val conteoVentas by ventaViewModel.conteoVentas.collectAsState()
+    val productosMasVendidos by ventaViewModel.productosMasVendidos.collectAsState()
+    val comprasSemana by compraViewModel.comprasSemana.collectAsState()
 
     // Refrescar datos cuando cambie el usuario
     LaunchedEffect(usuarioId) {
@@ -197,6 +200,250 @@ fun HistorialScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF44336)
                         )
+                    }
+                }
+            }
+        }
+
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Sección de Reportes
+                Text(
+                    text = "Reportes",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+
+                // Ventas del día
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Ventas del Día",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = null,
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Transacciones",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF666666)
+                                )
+                                Text(
+                                    text = "$conteoVentas",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "Monto Total",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF666666)
+                                )
+                                Text(
+                                    text = "S/ ${String.format("%.2f", totalVentas)}",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Productos más vendidos
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Productos Más Vendidos",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFF6B00),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        if (productosMasVendidos.isEmpty()) {
+                            Text(
+                                text = "No hay datos disponibles",
+                                fontSize = 14.sp,
+                                color = Color(0xFF999999)
+                            )
+                        } else {
+                            productosMasVendidos.forEachIndexed { index, producto ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .background(
+                                                    Color(0xFFFF6B00).copy(alpha = 0.1f),
+                                                    RoundedCornerShape(6.dp)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "${index + 1}",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFFFF6B00)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = producto.nombreProducto,
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF333333)
+                                        )
+                                    }
+                                    Text(
+                                        text = "${producto.totalVendido} unidades",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF666666)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Compras de la semana
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Compras de la Semana",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = null,
+                                tint = Color(0xFFF44336),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        if (comprasSemana.isEmpty()) {
+                            Text(
+                                text = "No hay compras en los últimos 7 días",
+                                fontSize = 14.sp,
+                                color = Color(0xFF999999)
+                            )
+                        } else {
+                            val comprasPorDia = comprasSemana.groupBy { compra ->
+                                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(compra.fecha))
+                            }
+                            comprasPorDia.forEach { (fecha, compras) ->
+                                val totalDia = compras.sumOf { it.costo }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.DateRange,
+                                            contentDescription = null,
+                                            tint = Color(0xFF999999),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = fecha,
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF333333)
+                                        )
+                                    }
+                                    Text(
+                                        text = "S/ ${String.format("%.2f", totalDia)}",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFF44336)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

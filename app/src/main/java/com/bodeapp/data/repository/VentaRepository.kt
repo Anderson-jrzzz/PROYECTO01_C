@@ -30,6 +30,11 @@ class VentaRepository(private val ventaDao: VentaDao) {
         return ventaDao.getProductosMasVendidos(usuarioId, inicioDelDia)
     }
 
+    fun getConteoVentasDelDia(usuarioId: Int): Flow<Int> {
+        val inicioDelDia = getStartOfDay()
+        return ventaDao.getConteoVentasDelDia(usuarioId, inicioDelDia)
+    }
+
     suspend fun insertVenta(venta: Venta): Long {
         return ventaDao.insertVenta(venta)
     }
