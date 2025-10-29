@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -85,7 +85,7 @@ fun ComprasScreen(
                 ) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Rounded.ArrowBack,
                             contentDescription = "Volver",
                             tint = Color.White
                         )
@@ -155,7 +155,7 @@ fun ComprasScreen(
                                     },
                                     leadingIcon = {
                                         Icon(
-                                            imageVector = Icons.Default.ShoppingCart,
+                                            imageVector = Icons.Rounded.ShoppingCart,
                                             contentDescription = null,
                                             tint = Color(0xFFFF6B00)
                                         )
@@ -173,7 +173,7 @@ fun ComprasScreen(
                             },
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.Add,
+                                    imageVector = Icons.Rounded.Add,
                                     contentDescription = null,
                                     tint = Color(0xFFFF6B00)
                                 )
@@ -391,7 +391,7 @@ fun ComprasScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ShoppingCart,
+                        imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = null,
                         tint = Color(0xFFE0E0E0),
                         modifier = Modifier.size(80.dp)
@@ -492,7 +492,7 @@ fun CompraItem(compra: Compra) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ShoppingCart,
+                        imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = null,
                         tint = Color.White
                     )
@@ -526,7 +526,7 @@ fun CompraItem(compra: Compra) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.DateRange,
+                    imageVector = Icons.Rounded.DateRange,
                     contentDescription = null,
                     tint = Color(0xFF999999),
                     modifier = Modifier.size(16.dp)

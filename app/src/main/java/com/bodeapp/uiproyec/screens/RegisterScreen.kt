@@ -6,7 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -92,7 +92,7 @@ fun RegisterScreen(
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.Rounded.ArrowBack,
                         contentDescription = "Volver",
                         tint = Color.White
                     )
@@ -129,7 +129,7 @@ fun RegisterScreen(
                 placeholder = { Text("Juan Pérez") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Person,
+                        imageVector = Icons.Rounded.Person,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -158,7 +158,7 @@ fun RegisterScreen(
                 placeholder = { Text("tu@email.com") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Email,
+                        imageVector = Icons.Rounded.Email,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -187,7 +187,7 @@ fun RegisterScreen(
                 placeholder = { Text("Mi Bodega") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Email,
+                        imageVector = Icons.Rounded.Email,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -216,7 +216,7 @@ fun RegisterScreen(
                 placeholder = { Text("••••••••") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Lock,
+                        imageVector = Icons.Rounded.Lock,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -224,7 +224,7 @@ fun RegisterScreen(
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.ShoppingCart else Icons.Default.Email,
+                            imageVector = if (passwordVisible) Icons.Rounded.ShoppingCart else Icons.Rounded.Email,
                             contentDescription = null,
                             tint = Color(0xFF999999)
                         )
@@ -255,7 +255,7 @@ fun RegisterScreen(
                 placeholder = { Text("••••••••") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Lock,
+                        imageVector = Icons.Rounded.Lock,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -263,7 +263,7 @@ fun RegisterScreen(
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
-                            imageVector = if (confirmPasswordVisible) Icons.Default.ShoppingCart else Icons.Default.Close,
+                            imageVector = if (confirmPasswordVisible) Icons.Rounded.ShoppingCart else Icons.Rounded.Close,
                             contentDescription = null,
                             tint = Color(0xFF999999)
                         )
