@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.bodeapp.model.Producto
 import com.bodeapp.model.Venta
+import com.bodeapp.util.UserSessionManager
 import com.bodeapp.viewmodel.ProductoViewModel
 import com.bodeapp.viewmodel.VentaViewModel
 import java.text.SimpleDateFormat
@@ -618,9 +620,21 @@ fun VentasScreen(
     productoViewModel: ProductoViewModel = viewModel(),
     ventaViewModel: VentaViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager.getInstance(context) }
+    val usuarioId = sessionManager.getUserId()
+    
     val productos by productoViewModel.productos.collectAsState()
     val ventasDelDia by ventaViewModel.ventasDelDia.collectAsState()
     val ventasFiltradas by ventaViewModel.ventasFiltradas.collectAsState()
+
+    // Refrescar datos cuando cambie el usuario
+    LaunchedEffect(usuarioId) {
+        if (usuarioId != -1) {
+            productoViewModel.refrescarProductos()
+            ventaViewModel.refrescarVentas()
+        }
+    }
 
     var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
     var cantidad by remember { mutableStateOf("") }
@@ -802,6 +816,12 @@ fun VentasScreen(
             item {
                 Button(
                     onClick = {
+                        if (usuarioId == -1) {
+                            errorMessage = "Error: Usuario no autenticado"
+                            showError = true
+                            return@Button
+                        }
+                        
                         if (productoSeleccionado == null) {
                             errorMessage = "Selecciona un producto"
                             showError = true
@@ -817,6 +837,7 @@ fun VentasScreen(
 
                         val producto = productoSeleccionado!!
                         val nuevaVenta = Venta(
+                            usuarioId = usuarioId,
                             productoId = producto.id,
                             nombreProducto = producto.nombre,
                             cantidad = cant,

@@ -13,12 +13,20 @@ import androidx.room.ForeignKey
             parentColumns = ["id"],
             childColumns = ["productoId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Usuario::class,
+            parentColumns = ["id"],
+            childColumns = ["usuarioId"],
+            onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["usuarioId"]), androidx.room.Index(value = ["productoId"])]
 )
 data class Venta(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val usuarioId: Int,
     val productoId: Int,
     val nombreProducto: String,
     val cantidad: Int,

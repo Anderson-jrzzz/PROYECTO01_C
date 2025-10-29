@@ -6,7 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 class ProductoRepository(private val productoDao: ProductoDao) {
 
-    val allProductos: Flow<List<Producto>> = productoDao.getAllProductos()
+    fun getAllProductos(usuarioId: Int): Flow<List<Producto>> {
+        return productoDao.getAllProductos(usuarioId)
+    }
 
     suspend fun insertProducto(producto: Producto): Long {
         return productoDao.insertProducto(producto)
@@ -24,8 +26,8 @@ class ProductoRepository(private val productoDao: ProductoDao) {
         return productoDao.getProductoById(id)
     }
 
-    suspend fun buscarProductoPorNombre(nombre: String): List<Producto> {
-        return productoDao.buscarProductoPorNombre(nombre)
+    suspend fun buscarProductoPorNombre(usuarioId: Int, nombre: String): List<Producto> {
+        return productoDao.buscarProductoPorNombre(usuarioId, nombre)
     }
 
     suspend fun reducirStock(id: Int, cantidad: Int) {

@@ -7,6 +7,7 @@ import com.bodeapp.data.BodeAppDatabase
 import com.bodeapp.data.repository.CompraRepository
 import com.bodeapp.data.repository.ProductoRepository
 import com.bodeapp.model.Compra
+import com.bodeapp.util.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
 
     private val compraRepository: CompraRepository
     private val productoRepository: ProductoRepository
+    private val sessionManager: UserSessionManager
 
     private val _comprasDelDia = MutableStateFlow<List<Compra>>(emptyList())
     val comprasDelDia: StateFlow<List<Compra>> = _comprasDelDia.asStateFlow()
@@ -23,23 +25,48 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
     private val _totalCompras = MutableStateFlow(0.0)
     val totalCompras: StateFlow<Double> = _totalCompras.asStateFlow()
 
+    private var comprasJob: kotlinx.coroutines.Job? = null
+    private var totalJob: kotlinx.coroutines.Job? = null
+
     init {
         val compraDao = BodeAppDatabase.getDatabase(application).compraDao()
         val productoDao = BodeAppDatabase.getDatabase(application).productoDao()
         compraRepository = CompraRepository(compraDao)
         productoRepository = ProductoRepository(productoDao)
+        sessionManager = UserSessionManager.getInstance(application)
 
-        viewModelScope.launch {
-            compraRepository.getComprasDelDia().collect { compras ->
-                _comprasDelDia.value = compras
+        cargarCompras()
+    }
+
+    private fun cargarCompras() {
+        comprasJob?.cancel()
+        totalJob?.cancel()
+
+        comprasJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                compraRepository.getComprasDelDia(usuarioId).collect { compras ->
+                    _comprasDelDia.value = compras
+                }
+            } else {
+                _comprasDelDia.value = emptyList()
             }
         }
 
-        viewModelScope.launch {
-            compraRepository.getTotalComprasDelDia().collect { total ->
-                _totalCompras.value = total ?: 0.0
+        totalJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                compraRepository.getTotalComprasDelDia(usuarioId).collect { total ->
+                    _totalCompras.value = total ?: 0.0
+                }
+            } else {
+                _totalCompras.value = 0.0
             }
         }
+    }
+
+    fun refrescarCompras() {
+        cargarCompras()
     }
 
     fun registrarCompra(compra: Compra, onSuccess: () -> Unit, onError: (String) -> Unit) {

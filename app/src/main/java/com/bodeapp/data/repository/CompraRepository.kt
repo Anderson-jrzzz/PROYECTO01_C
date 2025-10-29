@@ -7,16 +7,18 @@ import java.util.Calendar
 
 class CompraRepository(private val compraDao: CompraDao) {
 
-    val allCompras: Flow<List<Compra>> = compraDao.getAllCompras()
-
-    fun getComprasDelDia(): Flow<List<Compra>> {
-        val inicioDelDia = getStartOfDay()
-        return compraDao.getComprasDelDia(inicioDelDia)
+    fun getAllCompras(usuarioId: Int): Flow<List<Compra>> {
+        return compraDao.getAllCompras(usuarioId)
     }
 
-    fun getTotalComprasDelDia(): Flow<Double?> {
+    fun getComprasDelDia(usuarioId: Int): Flow<List<Compra>> {
         val inicioDelDia = getStartOfDay()
-        return compraDao.getTotalComprasDelDia(inicioDelDia)
+        return compraDao.getComprasDelDia(usuarioId, inicioDelDia)
+    }
+
+    fun getTotalComprasDelDia(usuarioId: Int): Flow<Double?> {
+        val inicioDelDia = getStartOfDay()
+        return compraDao.getTotalComprasDelDia(usuarioId, inicioDelDia)
     }
 
     suspend fun insertCompra(compra: Compra): Long {
@@ -27,9 +29,9 @@ class CompraRepository(private val compraDao: CompraDao) {
         compraDao.deleteCompra(compra)
     }
 
-    suspend fun deleteComprasDelDia() {
+    suspend fun deleteComprasDelDia(usuarioId: Int) {
         val inicioDelDia = getStartOfDay()
-        compraDao.deleteComprasDelDia(inicioDelDia)
+        compraDao.deleteComprasDelDia(usuarioId, inicioDelDia)
     }
 
     private fun getStartOfDay(): Long {

@@ -7,6 +7,7 @@ import com.bodeapp.data.BodeAppDatabase
 import com.bodeapp.data.repository.ProductoRepository
 import com.bodeapp.data.repository.VentaRepository
 import com.bodeapp.model.Venta
+import com.bodeapp.util.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,7 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val ventaRepository: VentaRepository
     private val productoRepository: ProductoRepository
+    private val sessionManager: UserSessionManager
 
     private val _ventasDelDia = MutableStateFlow<List<Venta>>(emptyList())
     val ventasDelDia: StateFlow<List<Venta>> = _ventasDelDia.asStateFlow()
@@ -32,30 +34,54 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
     private val _totalVentas = MutableStateFlow(0.0)
     val totalVentas: StateFlow<Double> = _totalVentas.asStateFlow()
 
+    private var ventasJob: kotlinx.coroutines.Job? = null
+    private var totalJob: kotlinx.coroutines.Job? = null
+
     init {
         val ventaDao = BodeAppDatabase.getDatabase(application).ventaDao()
         val productoDao = BodeAppDatabase.getDatabase(application).productoDao()
         ventaRepository = VentaRepository(ventaDao)
         productoRepository = ProductoRepository(productoDao)
+        sessionManager = UserSessionManager.getInstance(application)
 
-        viewModelScope.launch {
-            ventaRepository.getVentasDelDia().collect { ventas ->
-                _ventasDelDia.value = ventas
+        cargarVentas()
+    }
+
+    private fun cargarVentas() {
+        ventasJob?.cancel()
+        totalJob?.cancel()
+
+        ventasJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                ventaRepository.getVentasDelDia(usuarioId).collect { ventas ->
+                    _ventasDelDia.value = ventas
+                }
+            } else {
+                _ventasDelDia.value = emptyList()
             }
         }
 
-        viewModelScope.launch {
-            ventaRepository.getTotalVentasDelDia().collect { total ->
-                _totalVentas.value = total ?: 0.0
+        totalJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                ventaRepository.getTotalVentasDelDia(usuarioId).collect { total ->
+                    _totalVentas.value = total ?: 0.0
+                }
+            } else {
+                _totalVentas.value = 0.0
             }
         }
+    }
+
+    fun refrescarVentas() {
+        cargarVentas()
     }
 
     fun filtrarVentas(productoId: Int?, fechaDesde: String, fechaHasta: String) {
         viewModelScope.launch {
             try {
                 val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-
 
                 val desde = if (fechaDesde.isNotBlank()) {
                     formato.parse(fechaDesde)?.let { fecha ->
@@ -70,7 +96,6 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
                 } else {
                     0L
                 }
-
 
                 val hasta = if (fechaHasta.isNotBlank()) {
                     formato.parse(fechaHasta)?.let { fecha ->
@@ -90,8 +115,11 @@ class VentaViewModel(application: Application) : AndroidViewModel(application) {
                 filtroFechaDesde = desde
                 filtroFechaHasta = hasta
 
-                ventaRepository.getVentasFiltradas(productoId, desde, hasta).collect { ventas ->
-                    _ventasFiltradas.value = ventas
+                val usuarioId = sessionManager.getUserId()
+                if (usuarioId != -1) {
+                    ventaRepository.getVentasFiltradas(usuarioId, productoId, desde, hasta).collect { ventas ->
+                        _ventasFiltradas.value = ventas
+                    }
                 }
             } catch (e: Exception) {
                 _ventasFiltradas.value = emptyList()

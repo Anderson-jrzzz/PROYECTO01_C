@@ -24,6 +24,7 @@ import androidx.navigation.NavHostController
 import com.bodeapp.model.Producto
 import com.bodeapp.viewmodel.ProductoViewModel
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.bodeapp.util.UserSessionManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +32,18 @@ fun ProductosScreen(
     navController: NavHostController,
     viewModel: ProductoViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager.getInstance(context) }
+    val usuarioId = sessionManager.getUserId()
+    
     val productos by viewModel.productos.collectAsState()
+
+    // Refrescar productos cuando cambie el usuario
+    LaunchedEffect(usuarioId) {
+        if (usuarioId != -1) {
+            viewModel.refrescarProductos()
+        }
+    }
 
     var showEditDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
@@ -148,11 +160,18 @@ fun ProductosScreen(
             item {
                 Button(
                     onClick = {
+                        if (usuarioId == -1) {
+                            errorMessage = "Error: Usuario no autenticado"
+                            showError = true
+                            return@Button
+                        }
+                        
                         if (nombreProducto.isEmpty() || precioProducto.isEmpty() || stockProducto.isEmpty()) {
                             errorMessage = "Por favor completa todos los campos"
                             showError = true
                         } else {
                             val nuevoProducto = Producto(
+                                usuarioId = usuarioId,
                                 nombre = nombreProducto,
                                 precio = precioProducto.toDoubleOrNull() ?: 0.0,
                                 stock = stockProducto.toIntOrNull() ?: 0

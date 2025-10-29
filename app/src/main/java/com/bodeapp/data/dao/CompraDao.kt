@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CompraDao {
 
-    @Query("SELECT * FROM compras ORDER BY fecha DESC")
-    fun getAllCompras(): Flow<List<Compra>>
+    @Query("SELECT * FROM compras WHERE usuarioId = :usuarioId ORDER BY fecha DESC")
+    fun getAllCompras(usuarioId: Int): Flow<List<Compra>>
 
-    @Query("SELECT * FROM compras WHERE fecha >= :inicioDelDia ORDER BY fecha DESC")
-    fun getComprasDelDia(inicioDelDia: Long): Flow<List<Compra>>
+    @Query("SELECT * FROM compras WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia ORDER BY fecha DESC")
+    fun getComprasDelDia(usuarioId: Int, inicioDelDia: Long): Flow<List<Compra>>
 
-    @Query("SELECT SUM(costo) FROM compras WHERE fecha >= :inicioDelDia")
-    fun getTotalComprasDelDia(inicioDelDia: Long): Flow<Double?>
+    @Query("SELECT SUM(costo) FROM compras WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia")
+    fun getTotalComprasDelDia(usuarioId: Int, inicioDelDia: Long): Flow<Double?>
 
     @Insert
     suspend fun insertCompra(compra: Compra): Long
@@ -22,6 +22,6 @@ interface CompraDao {
     @Delete
     suspend fun deleteCompra(compra: Compra)
 
-    @Query("DELETE FROM compras WHERE fecha >= :inicioDelDia")
-    suspend fun deleteComprasDelDia(inicioDelDia: Long)
+    @Query("DELETE FROM compras WHERE usuarioId = :usuarioId AND fecha >= :inicioDelDia")
+    suspend fun deleteComprasDelDia(usuarioId: Int, inicioDelDia: Long)
 }

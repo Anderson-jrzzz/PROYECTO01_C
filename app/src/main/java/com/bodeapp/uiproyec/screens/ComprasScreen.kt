@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.bodeapp.model.Compra
 import com.bodeapp.model.Producto
+import com.bodeapp.util.UserSessionManager
 import com.bodeapp.viewmodel.CompraViewModel
 import com.bodeapp.viewmodel.ProductoViewModel
 import java.text.SimpleDateFormat
@@ -33,8 +35,20 @@ fun ComprasScreen(
     productoViewModel: ProductoViewModel = viewModel(),
     compraViewModel: CompraViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager.getInstance(context) }
+    val usuarioId = sessionManager.getUserId()
+    
     val productos by productoViewModel.productos.collectAsState()
     val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
+
+    // Refrescar datos cuando cambie el usuario
+    LaunchedEffect(usuarioId) {
+        if (usuarioId != -1) {
+            productoViewModel.refrescarProductos()
+            compraViewModel.refrescarCompras()
+        }
+    }
 
     var selectedProductoId by rememberSaveable { mutableStateOf<Int?>(null) }
     val productoSeleccionado = productos.firstOrNull { it.id == selectedProductoId }
@@ -280,6 +294,12 @@ fun ComprasScreen(
             Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Button(
                     onClick = {
+                        if (usuarioId == -1) {
+                            errorMessage = "Error: Usuario no autenticado"
+                            showError = true
+                            return@Button
+                        }
+                        
                         val productoFinal = if (mostrarNuevoProducto) nuevoProducto else productoSeleccionado?.nombre
 
                         if (productoFinal.isNullOrEmpty()) {
@@ -312,6 +332,7 @@ fun ComprasScreen(
                         val costoTotal = costoUnit * cantidadInt
 
                         val nuevaCompra = Compra(
+                            usuarioId = usuarioId,
                             productoId = selectedProductoId,
                             nombreProducto = productoFinal,
                             cantidad = cantidadInt,
