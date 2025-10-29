@@ -1,36 +1,92 @@
 package com.bodeapp.uiproyec.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import com.bodeapp.util.UserSessionManager
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun HomeScreen(navController: NavHostController) {
+    val scrollState = rememberScrollState()
     val orangeGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFFF6B00), Color(0xFFFFA726))
     )
 
+    val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager.getInstance(context) }
+
+    // Estados para la información del usuario
+    var userName by remember { mutableStateOf("Usuario") }
+    var storeName by remember { mutableStateOf("Mi Bodega") }
+    var userInitials by remember { mutableStateOf("U") }
+
+    // Función para cargar los datos del usuario
+    fun loadUserData(
+        sessionManager: UserSessionManager,
+        onNameLoaded: (String) -> Unit,
+        onStoreLoaded: (String) -> Unit,
+        onInitialsLoaded: (String) -> Unit
+    ) {
+        try {
+            // Obtener datos del usuario de manera segura
+            val name = sessionManager.getUserName() ?: "Usuario"
+            val store = sessionManager.getStoreName() ?: "Mi Bodega"
+
+            // Generar iniciales de manera segura
+            val initials = name.takeIf { it.isNotBlank() }?.let {
+                it.split(" ")
+                    .take(2)
+                    .mapNotNull { word -> word.firstOrNull()?.uppercaseChar() }
+                    .joinToString("")
+                    .ifEmpty { "U" }
+            } ?: "U"
+
+            // Actualizar los estados en el hilo principal
+            onNameLoaded(name)
+            onStoreLoaded(store)
+            onInitialsLoaded(initials)
+        } catch (e: Exception) {
+            // En caso de error, establecer valores por defecto
+            onNameLoaded("Usuario")
+            onStoreLoaded("Mi Bodega")
+            onInitialsLoaded("U")
+        }
+    }
+
+    // Cargar datos del usuario al iniciar el composable
+    LaunchedEffect(Unit) {
+        loadUserData(
+            sessionManager = sessionManager,
+            onNameLoaded = { name -> userName = name },
+            onStoreLoaded = { store -> storeName = store },
+            onInitialsLoaded = { initials -> userInitials = initials }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .background(Color(0xFFF5F5F5))
     ) {
         // Header con gradiente
@@ -47,14 +103,16 @@ fun HomeScreen(navController: NavHostController) {
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "Usuario Demo",
+                    text = userName.ifEmpty { "Usuario" },
                     color = Color.White,
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    modifier = Modifier.fillMaxWidth(0.8f)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Mi Bodega",
+                    text = storeName.ifEmpty { "Mi Bodega" },
                     color = Color.White.copy(alpha = 0.9f),
                     fontSize = 14.sp
                 )
@@ -69,7 +127,7 @@ fun HomeScreen(navController: NavHostController) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "UD",
+                    text = userInitials.take(2).uppercase(),
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
@@ -186,6 +244,7 @@ fun HomeScreen(navController: NavHostController) {
             // Cerrar sesión
             TextButton(
                 onClick = {
+                    sessionManager.clearSession()
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }

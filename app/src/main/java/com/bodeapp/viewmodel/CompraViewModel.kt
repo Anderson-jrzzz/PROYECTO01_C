@@ -69,6 +69,16 @@ class CompraViewModel(application: Application) : AndroidViewModel(application) 
         cargarCompras()
     }
 
+    /**
+     * Reinicia los contadores de compras del día
+     */
+    fun reiniciarContadores() {
+        viewModelScope.launch {
+            _totalCompras.value = 0.0
+            _comprasDelDia.value = emptyList()
+        }
+    }
+
     fun registrarCompra(compra: Compra, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {

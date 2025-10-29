@@ -67,7 +67,7 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
                     onError("Usuario no autenticado")
                     return@launch
                 }
-                
+
                 val cierre = CierreCaja(
                     usuarioId = usuarioId,
                     totalVentas = totalVentas,
@@ -75,13 +75,7 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
                     utilidad = totalVentas - totalCompras,
                 )
                 cierreRepository.insert(cierre)
-                try {
-                    ventaRepository.deleteVentasDelDia(usuarioId)
-                    compraRepository.deleteComprasDelDia(usuarioId)
-                    onSuccess()
-                } catch (e: Exception) {
-                    onError("Cierre generado, pero error al reiniciar datos: ${e.message}")
-                }
+                onSuccess()
             } catch (e: Exception) {
                 onError("Error al generar cierre: ${e.message}")
             }
@@ -123,6 +117,20 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
                 cierreRepository.getByFecha(usuarioId, desde, hasta).collect { lista ->
                     _cierres.value = lista
                 }
+            }
+        }
+    }
+
+    /**
+     * Reinicia los contadores de ventas y compras del día
+     */
+    fun reiniciarContadores() {
+        viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                // Aquí podrías agregar lógica adicional si es necesario
+                // Por ahora, solo recargamos los cierres para actualizar la UI
+                refrescarCierres()
             }
         }
     }
