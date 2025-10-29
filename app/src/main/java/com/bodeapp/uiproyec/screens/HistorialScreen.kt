@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -130,7 +130,7 @@ fun HistorialScreen(
                 ) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Rounded.ArrowBack,
                             contentDescription = "Volver",
                             tint = Color.White
                         )
@@ -244,7 +244,7 @@ fun HistorialScreen(
                                 color = Color(0xFF333333)
                             )
                             Icon(
-                                imageVector = Icons.Default.DateRange,
+                                imageVector = Icons.Rounded.DateRange,
                                 contentDescription = null,
                                 tint = Color(0xFF4CAF50),
                                 modifier = Modifier.size(20.dp)
@@ -309,7 +309,7 @@ fun HistorialScreen(
                                 color = Color(0xFF333333)
                             )
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = Icons.Rounded.Star,
                                 contentDescription = null,
                                 tint = Color(0xFFFF6B00),
                                 modifier = Modifier.size(20.dp)
@@ -393,7 +393,7 @@ fun HistorialScreen(
                                 color = Color(0xFF333333)
                             )
                             Icon(
-                                imageVector = Icons.Default.ShoppingCart,
+                                imageVector = Icons.Rounded.ShoppingCart,
                                 contentDescription = null,
                                 tint = Color(0xFFF44336),
                                 modifier = Modifier.size(20.dp)
@@ -423,7 +423,7 @@ fun HistorialScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.DateRange,
+                                            imageVector = Icons.Rounded.DateRange,
                                             contentDescription = null,
                                             tint = Color(0xFF999999),
                                             modifier = Modifier.size(16.dp)
@@ -494,7 +494,7 @@ fun HistorialScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ShoppingCart,
+                        imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = null,
                         tint = Color(0xFFE0E0E0),
                         modifier = Modifier.size(80.dp)
@@ -521,7 +521,7 @@ fun HistorialScreen(
 fun TransaccionHistorialItem(transaccion: TransaccionHistorial) {
     val esVenta = transaccion is TransaccionHistorial.TransaccionVenta
     val backgroundColor = if (esVenta) Color(0xFF4CAF50) else Color(0xFFFF6B00)
-    val icon = if (esVenta) Icons.Default.DateRange else Icons.Default.ShoppingCart
+    val icon = if (esVenta) Icons.Rounded.DateRange else Icons.Rounded.ShoppingCart
     val tipo = if (esVenta) "Venta" else "Compra"
     val signo = if (esVenta) "+" else "-"
     val colorMonto = if (esVenta) Color(0xFF4CAF50) else Color(0xFFF44336)
@@ -598,7 +598,7 @@ fun TransaccionHistorialItem(transaccion: TransaccionHistorial) {
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = if (esVenta) Icons.Default.Lock else Icons.Default.DateRange,
+                    imageVector = if (esVenta) Icons.Rounded.Lock else Icons.Rounded.DateRange,
                     contentDescription = null,
                     tint = Color(0xFF999999),
                     modifier = Modifier.size(16.dp)

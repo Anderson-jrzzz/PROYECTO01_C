@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.rounded.*
 //import androidx.compose.material.icons.filled.Store
 //import androidx.compose.material.icons.filled.Visibility
 //import androidx.compose.material.icons.filled.VisibilityOff
@@ -99,7 +97,7 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Email,
+                    imageVector = Icons.Rounded.Email,
                     contentDescription = "Logo",
                     tint = Color.White,
                     modifier = Modifier.size(50.dp)
@@ -135,7 +133,7 @@ fun LoginScreen(
                 placeholder = { Text("tu@email.com") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Email,
+                        imageVector = Icons.Rounded.Email,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -167,7 +165,7 @@ fun LoginScreen(
                 placeholder = { Text("••••••••") },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Lock,
+                        imageVector = Icons.Rounded.Lock,
                         contentDescription = null,
                         tint = Color(0xFF999999)
                     )
@@ -175,7 +173,7 @@ fun LoginScreen(
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Lock else Icons.Default.Edit,
+                            imageVector = if (passwordVisible) Icons.Rounded.Lock else Icons.Rounded.Edit,
                             contentDescription = null,
                             tint = Color(0xFF999999)
                         )

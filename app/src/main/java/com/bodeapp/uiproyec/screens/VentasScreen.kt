@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,7 +64,7 @@ fun FiltrosVentas(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    imageVector = Icons.Rounded.Search,
                     contentDescription = null,
                     tint = Color(0xFFFF6B00),
                     modifier = Modifier.size(20.dp)
@@ -101,7 +101,7 @@ fun FiltrosVentas(
                         .menuAnchor(),
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.ShoppingCart,
+                            imageVector = Icons.Rounded.ShoppingCart,
                             contentDescription = null,
                             tint = Color(0xFFFF6B00),
                             modifier = Modifier.size(20.dp)
@@ -136,7 +136,7 @@ fun FiltrosVentas(
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.List,
+                                imageVector = Icons.Rounded.List,
                                 contentDescription = null,
                                 tint = Color(0xFFFF6B00)
                             )
@@ -156,7 +156,7 @@ fun FiltrosVentas(
                             },
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.ShoppingCart,
+                                    imageVector = Icons.Rounded.ShoppingCart,
                                     contentDescription = null,
                                     tint = if (productoFiltro?.id == producto.id) Color(0xFFFF6B00) else Color(0xFF999999)
                                 )
@@ -193,7 +193,7 @@ fun FiltrosVentas(
                     modifier = Modifier.weight(1f),
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.DateRange,
+                            imageVector = Icons.Rounded.DateRange,
                             contentDescription = null,
                             tint = Color(0xFFFF6B00),
                             modifier = Modifier.size(20.dp)
@@ -224,7 +224,7 @@ fun FiltrosVentas(
                     modifier = Modifier.weight(1f),
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.DateRange,
+                            imageVector = Icons.Rounded.DateRange,
                             contentDescription = null,
                             tint = Color(0xFFFF6B00),
                             modifier = Modifier.size(20.dp)
@@ -252,7 +252,7 @@ fun FiltrosVentas(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Warning,
+                        imageVector = Icons.Rounded.Warning,
                         contentDescription = null,
                         tint = Color(0xFFF44336),
                         modifier = Modifier.size(16.dp)
@@ -303,7 +303,7 @@ fun FiltrosVentas(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Search,
+                            imageVector = Icons.Rounded.Search,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
@@ -367,7 +367,7 @@ fun VentasFiltradasDialog(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.List,
+                                imageVector = Icons.Rounded.List,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp)
@@ -394,7 +394,7 @@ fun VentasFiltradasDialog(
                                 .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Close,
+                                imageVector = Icons.Rounded.Close,
                                 contentDescription = "Cerrar",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -415,7 +415,7 @@ fun VentasFiltradasDialog(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Search,
+                                imageVector = Icons.Rounded.Search,
                                 contentDescription = null,
                                 tint = Color(0xFFE0E0E0),
                                 modifier = Modifier.size(80.dp)
@@ -537,7 +537,7 @@ fun VentaItemDialog(venta: Venta) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.DateRange,
+                            imageVector = Icons.Rounded.DateRange,
                             contentDescription = null,
                             tint = Color(0xFFFF6B00),
                             modifier = Modifier.size(16.dp)
@@ -554,7 +554,7 @@ fun VentaItemDialog(venta: Venta) {
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.DateRange,
+                            imageVector = Icons.Rounded.DateRange,
                             contentDescription = null,
                             tint = Color(0xFF999999),
                             modifier = Modifier.size(16.dp)
@@ -671,7 +671,7 @@ fun VentasScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.Rounded.ArrowBack,
                         contentDescription = "Volver",
                         tint = Color.White
                     )
@@ -751,7 +751,7 @@ fun VentasScreen(
                                         },
                                         leadingIcon = {
                                             Icon(
-                                                imageVector = Icons.Default.Edit,
+                                                imageVector = Icons.Rounded.Edit,
                                                 contentDescription = null,
                                                 tint = Color(0xFFFF6B00)
                                             )
@@ -969,7 +969,7 @@ fun VentaItem(venta: Venta) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.DateRange,
+                        imageVector = Icons.Rounded.DateRange,
                         contentDescription = null,
                         tint = Color.White
                     )
@@ -1001,7 +1001,7 @@ fun VentaItem(venta: Venta) {
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = Icons.Rounded.Close,
                     contentDescription = null,
                     tint = Color(0xFF999999),
                     modifier = Modifier.size(16.dp)

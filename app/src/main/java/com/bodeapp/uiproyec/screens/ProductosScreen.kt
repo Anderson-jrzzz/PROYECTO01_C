@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -77,7 +77,7 @@ fun ProductosScreen(
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.Rounded.ArrowBack,
                         contentDescription = "Volver",
                         tint = Color.White
                     )
@@ -223,7 +223,7 @@ fun ProductosScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = Icons.Rounded.Close,
                             contentDescription = null,
                             tint = Color(0xFFE0E0E0),
                             modifier = Modifier.size(80.dp)
@@ -328,7 +328,7 @@ fun ProductoItem(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ShoppingCart,
+                        imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = null,
                         tint = Color.White
                     )
@@ -361,14 +361,14 @@ fun ProductoItem(
             Row {
                 IconButton(onClick = onEdit) {
                     Icon(
-                        imageVector = Icons.Default.Edit,
+                        imageVector = Icons.Rounded.Edit,
                         contentDescription = "Editar",
                         tint = Color(0xFF2196F3)
                     )
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
+                        imageVector = Icons.Rounded.Delete,
                         contentDescription = "Eliminar",
                         tint = Color(0xFFF44336)
                     )
@@ -407,7 +407,7 @@ fun EditarProductoDialog(
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                        Icon(Icons.Rounded.Close, contentDescription = "Cerrar")
                     }
                 }
 

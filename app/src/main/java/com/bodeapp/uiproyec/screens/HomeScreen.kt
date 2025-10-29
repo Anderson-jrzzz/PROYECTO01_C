@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -148,7 +148,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Productos",
                     subtitle = "Gestiona tu inventario",
-                    icon = Icons.Default.ShoppingCart,
+                    icon = Icons.Rounded.ShoppingCart,
                     backgroundColor = Color(0xFFFF6B00),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("productos") }
@@ -159,7 +159,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Ventas",
                     subtitle = "Registra nuevas ventas",
-                    icon = Icons.Default.Email,
+                    icon = Icons.Rounded.Email,
                     backgroundColor = Color(0xFFFFA726),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("ventas") }
@@ -175,7 +175,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Compras/Insumos",
                     subtitle = "Registra tus compras",
-                    icon = Icons.Default.ShoppingCart,
+                    icon = Icons.Rounded.ShoppingCart,
                     backgroundColor = Color(0xFFFF6B00),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("compras") }
@@ -186,7 +186,7 @@ fun HomeScreen(navController: NavHostController) {
                 MenuCard(
                     title = "Cierre de Caja",
                     subtitle = "Reportes y resumen",
-                    icon = Icons.Default.Lock,
+                    icon = Icons.Rounded.Lock,
                     backgroundColor = Color(0xFFFFA726),
                     modifier = Modifier.weight(1f),
                     onClick = { navController.navigate("cierre") }
@@ -217,7 +217,7 @@ fun HomeScreen(navController: NavHostController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Lock,
+                            imageVector = Icons.Rounded.Lock,
                             contentDescription = null,
                             tint = Color.White
                         )
@@ -252,7 +252,7 @@ fun HomeScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = Icons.Rounded.Close,
                     contentDescription = null,
                     tint = Color(0xFFFF6B00)
                 )

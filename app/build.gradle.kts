@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
 
     implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.foundation:foundation:1.6.0")
 // o la versión que estés usando
     implementation("androidx.compose.material3:material3:1.2.0")
