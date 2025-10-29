@@ -7,25 +7,27 @@ import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 
 class VentaRepository(private val ventaDao: VentaDao) {
-    fun getVentasFiltradas(productoId: Int?, fechaDesde: Long, fechaHasta: Long): Flow<List<Venta>> {
-        return ventaDao.getVentasFiltradas(productoId, fechaDesde, fechaHasta)
+    fun getVentasFiltradas(usuarioId: Int, productoId: Int?, fechaDesde: Long, fechaHasta: Long): Flow<List<Venta>> {
+        return ventaDao.getVentasFiltradas(usuarioId, productoId, fechaDesde, fechaHasta)
     }
 
-    val allVentas: Flow<List<Venta>> = ventaDao.getAllVentas()
-
-    fun getVentasDelDia(): Flow<List<Venta>> {
-        val inicioDelDia = getStartOfDay()
-        return ventaDao.getVentasDelDia(inicioDelDia)
+    fun getAllVentas(usuarioId: Int): Flow<List<Venta>> {
+        return ventaDao.getAllVentas(usuarioId)
     }
 
-    fun getTotalVentasDelDia(): Flow<Double?> {
+    fun getVentasDelDia(usuarioId: Int): Flow<List<Venta>> {
         val inicioDelDia = getStartOfDay()
-        return ventaDao.getTotalVentasDelDia(inicioDelDia)
+        return ventaDao.getVentasDelDia(usuarioId, inicioDelDia)
     }
 
-    fun getProductosMasVendidos(): Flow<List<ProductoVendido>> {
+    fun getTotalVentasDelDia(usuarioId: Int): Flow<Double?> {
         val inicioDelDia = getStartOfDay()
-        return ventaDao.getProductosMasVendidos(inicioDelDia)
+        return ventaDao.getTotalVentasDelDia(usuarioId, inicioDelDia)
+    }
+
+    fun getProductosMasVendidos(usuarioId: Int): Flow<List<ProductoVendido>> {
+        val inicioDelDia = getStartOfDay()
+        return ventaDao.getProductosMasVendidos(usuarioId, inicioDelDia)
     }
 
     suspend fun insertVenta(venta: Venta): Long {
@@ -36,9 +38,9 @@ class VentaRepository(private val ventaDao: VentaDao) {
         ventaDao.deleteVenta(venta)
     }
 
-    suspend fun deleteVentasDelDia() {
+    suspend fun deleteVentasDelDia(usuarioId: Int) {
         val inicioDelDia = getStartOfDay()
-        ventaDao.deleteVentasDelDia(inicioDelDia)
+        ventaDao.deleteVentasDelDia(usuarioId, inicioDelDia)
     }
 
     private fun getStartOfDay(): Long {

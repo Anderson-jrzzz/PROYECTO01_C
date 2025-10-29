@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.bodeapp.data.BodeAppDatabase
 import com.bodeapp.data.repository.UsuarioRepository
 import com.bodeapp.model.Usuario
+import com.bodeapp.util.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: UsuarioRepository
+    private val sessionManager: UserSessionManager
 
     private val _loginResult = MutableStateFlow<LoginResult?>(null)
     val loginResult: StateFlow<LoginResult?> = _loginResult.asStateFlow()
@@ -24,6 +26,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     init {
         val usuarioDao = BodeAppDatabase.getDatabase(application).usuarioDao()
         repository = UsuarioRepository(usuarioDao)
+        sessionManager = UserSessionManager.getInstance(application)
     }
 
     fun login(email: String, password: String) {
@@ -31,6 +34,13 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val usuario = repository.login(email, password)
                 if (usuario != null) {
+                    // Guardar sesión del usuario
+                    sessionManager.saveUserSession(
+                        userId = usuario.id,
+                        email = usuario.email,
+                        userName = usuario.nombreCompleto,
+                        storeName = usuario.nombreTienda
+                    )
                     _loginResult.value = LoginResult.Success(usuario)
                 } else {
                     _loginResult.value = LoginResult.Error("Correo o contraseña incorrectos")
@@ -61,7 +71,15 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
                 val userId = repository.insertUsuario(nuevoUsuario)
                 if (userId > 0) {
-                    _registerResult.value = RegisterResult.Success(nuevoUsuario.copy(id = userId.toInt()))
+                    val usuarioCreado = nuevoUsuario.copy(id = userId.toInt())
+                    // Guardar sesión automáticamente después del registro
+                    sessionManager.saveUserSession(
+                        userId = usuarioCreado.id,
+                        email = usuarioCreado.email,
+                        userName = usuarioCreado.nombreCompleto,
+                        storeName = usuarioCreado.nombreTienda
+                    )
+                    _registerResult.value = RegisterResult.Success(usuarioCreado)
                 } else {
                     _registerResult.value = RegisterResult.Error("Error al crear la cuenta")
                 }
@@ -77,6 +95,18 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     fun resetRegisterResult() {
         _registerResult.value = null
+    }
+    
+    fun logout() {
+        sessionManager.clearSession()
+    }
+    
+    fun isLoggedIn(): Boolean {
+        return sessionManager.isLoggedIn()
+    }
+    
+    fun getCurrentUserId(): Int {
+        return sessionManager.getUserId()
     }
 }
 

@@ -8,6 +8,7 @@ import com.bodeapp.data.repository.CierreCajaRepository
 import com.bodeapp.data.repository.CompraRepository
 import com.bodeapp.data.repository.VentaRepository
 import com.bodeapp.model.CierreCaja
+import com.bodeapp.util.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,7 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
     private val cierreRepository: CierreCajaRepository
     private val ventaRepository: VentaRepository
     private val compraRepository: CompraRepository
+    private val sessionManager: UserSessionManager
 
     private val _cierres = MutableStateFlow<List<CierreCaja>>(emptyList())
     val cierres: StateFlow<List<CierreCaja>> = _cierres.asStateFlow()
@@ -27,31 +29,55 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
     private var filtroDesde: Long? = null
     private var filtroHasta: Long? = null
 
+    private var cierresJob: kotlinx.coroutines.Job? = null
+
     init {
         val db = BodeAppDatabase.getDatabase(application)
         cierreRepository = CierreCajaRepository(db.cierreCajaDao())
         ventaRepository = VentaRepository(db.ventaDao())
         compraRepository = CompraRepository(db.compraDao())
+        sessionManager = UserSessionManager.getInstance(application)
 
-        viewModelScope.launch {
-            cierreRepository.getAll().collect { lista ->
-                _cierres.value = lista
+        cargarCierres()
+    }
+
+    private fun cargarCierres() {
+        cierresJob?.cancel()
+        cierresJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                cierreRepository.getAll(usuarioId).collect { lista ->
+                    _cierres.value = lista
+                }
+            } else {
+                _cierres.value = emptyList()
             }
         }
+    }
+
+    fun refrescarCierres() {
+        cargarCierres()
     }
 
     fun generarCierre(totalVentas: Double, totalCompras: Double, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
+                val usuarioId = sessionManager.getUserId()
+                if (usuarioId == -1) {
+                    onError("Usuario no autenticado")
+                    return@launch
+                }
+                
                 val cierre = CierreCaja(
+                    usuarioId = usuarioId,
                     totalVentas = totalVentas,
                     totalCompras = totalCompras,
                     utilidad = totalVentas - totalCompras,
                 )
                 cierreRepository.insert(cierre)
                 try {
-                    ventaRepository.deleteVentasDelDia()
-                    compraRepository.deleteComprasDelDia()
+                    ventaRepository.deleteVentasDelDia(usuarioId)
+                    compraRepository.deleteComprasDelDia(usuarioId)
                     onSuccess()
                 } catch (e: Exception) {
                     onError("Cierre generado, pero error al reiniciar datos: ${e.message}")
@@ -92,8 +118,11 @@ class CierreCajaViewModel(application: Application) : AndroidViewModel(applicati
             filtroDesde = desde
             filtroHasta = hasta
 
-            cierreRepository.getByFecha(desde, hasta).collect { lista ->
-                _cierres.value = lista
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                cierreRepository.getByFecha(usuarioId, desde, hasta).collect { lista ->
+                    _cierres.value = lista
+                }
             }
         }
     }

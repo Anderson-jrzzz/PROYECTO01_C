@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.bodeapp.data.BodeAppDatabase
 import com.bodeapp.data.repository.ProductoRepository
 import com.bodeapp.model.Producto
+import com.bodeapp.util.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 class ProductoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ProductoRepository
+    private val sessionManager: UserSessionManager
 
     private val _productos = MutableStateFlow<List<Producto>>(emptyList())
     val productos: StateFlow<List<Producto>> = _productos.asStateFlow()
@@ -21,12 +23,29 @@ class ProductoViewModel(application: Application) : AndroidViewModel(application
     init {
         val productoDao = BodeAppDatabase.getDatabase(application).productoDao()
         repository = ProductoRepository(productoDao)
+        sessionManager = UserSessionManager.getInstance(application)
 
-        viewModelScope.launch {
-            repository.allProductos.collect { listaProductos ->
-                _productos.value = listaProductos
+        cargarProductos()
+    }
+
+    private var productosJob: kotlinx.coroutines.Job? = null
+
+    private fun cargarProductos() {
+        productosJob?.cancel()
+        productosJob = viewModelScope.launch {
+            val usuarioId = sessionManager.getUserId()
+            if (usuarioId != -1) {
+                repository.getAllProductos(usuarioId).collect { listaProductos ->
+                    _productos.value = listaProductos
+                }
+            } else {
+                _productos.value = emptyList()
             }
         }
+    }
+
+    fun refrescarProductos() {
+        cargarProductos()
     }
 
     fun insertProducto(producto: Producto) {

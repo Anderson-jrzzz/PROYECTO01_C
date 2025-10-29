@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.bodeapp.model.Compra
 import com.bodeapp.model.Venta
+import com.bodeapp.util.UserSessionManager
 import com.bodeapp.viewmodel.VentaViewModel
 import com.bodeapp.viewmodel.CompraViewModel
 import java.text.SimpleDateFormat
@@ -58,6 +60,10 @@ fun HistorialScreen(
     ventaViewModel: VentaViewModel = viewModel(),
     compraViewModel: CompraViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager.getInstance(context) }
+    val usuarioId = sessionManager.getUserId()
+    
     var selectedTab by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Todos", "Ventas", "Compras")
@@ -66,6 +72,14 @@ fun HistorialScreen(
     val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
     val totalVentas by ventaViewModel.totalVentas.collectAsState()
     val totalCompras by compraViewModel.totalCompras.collectAsState()
+
+    // Refrescar datos cuando cambie el usuario
+    LaunchedEffect(usuarioId) {
+        if (usuarioId != -1) {
+            ventaViewModel.refrescarVentas()
+            compraViewModel.refrescarCompras()
+        }
+    }
 
     val todasTransacciones = remember(ventasDelDia, comprasDelDia) {
         val ventas = ventasDelDia.map { venta ->

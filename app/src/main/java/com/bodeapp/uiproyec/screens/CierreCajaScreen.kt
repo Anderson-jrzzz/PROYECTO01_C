@@ -15,12 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.bodeapp.data.ProductoVendido
+import com.bodeapp.util.UserSessionManager
 import com.bodeapp.viewmodel.VentaViewModel
 import com.bodeapp.viewmodel.CompraViewModel
 import com.bodeapp.viewmodel.CierreCajaViewModel
@@ -36,6 +38,10 @@ fun CierreCajaScreen(
     compraViewModel: CompraViewModel = viewModel(),
     cierreCajaViewModel: CierreCajaViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager.getInstance(context) }
+    val usuarioId = sessionManager.getUserId()
+    
     val totalVentas by ventaViewModel.totalVentas.collectAsState()
     val totalCompras by compraViewModel.totalCompras.collectAsState()
     val utilidad = totalVentas - totalCompras
@@ -44,6 +50,15 @@ fun CierreCajaScreen(
     val comprasDelDia by compraViewModel.comprasDelDia.collectAsState()
 
     val cierres by cierreCajaViewModel.cierres.collectAsState()
+
+    // Refrescar datos cuando cambie el usuario
+    LaunchedEffect(usuarioId) {
+        if (usuarioId != -1) {
+            ventaViewModel.refrescarVentas()
+            compraViewModel.refrescarCompras()
+            cierreCajaViewModel.refrescarCierres()
+        }
+    }
 
     var filtroDesde by rememberSaveable { mutableStateOf("") }
     var filtroHasta by rememberSaveable { mutableStateOf("") }
