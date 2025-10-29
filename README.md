@@ -10,8 +10,8 @@ La aplicación utiliza arquitectura MVVM (Model-View-ViewModel) con Room Databas
 
 | Nombre | Rol |
 |--------|-----|
-| **Ramos Iman, Anderson** | Desarrollador Full Stack - Backend & Database |
-| **Roman Mauricio, Jair** | Desarrollador Full Stack - Frontend & UI/UX |
+| **Ramos Iman, Anderson** | Desarrollador Full Stack  |
+| **Roman Mauricio, Jair** | Desarrollador Full Stack  |
 
 ## Diseño
 
